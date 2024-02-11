@@ -1,9 +1,6 @@
 package xyz.eclipseisoffline.eclipsescustomname;
 
-import com.mojang.authlib.GameProfile;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import net.minecraft.nbt.NbtCompound;
@@ -20,7 +17,7 @@ import net.minecraft.world.World;
 
 public class PlayerNameManager extends PersistentState {
 
-    private static Type<PlayerNameManager> DATA_TYPE = new Type<>(PlayerNameManager::new,
+    private static final Type<PlayerNameManager> DATA_TYPE = new Type<>(PlayerNameManager::new,
             PlayerNameManager::loadFromNbt, null);
     private final Map<UUID, Text> playerPrefixes = new HashMap<>();
     private final Map<UUID, Text> playerSuffixes = new HashMap<>();
