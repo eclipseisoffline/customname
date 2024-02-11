@@ -67,7 +67,7 @@ publishing {
     repositories {
         maven {
             name = "GithubPackages"
-            url = uri("https://maven.pkg.github.com/eclipseisoffline/eclipsestweakeroo")
+            url = uri("https://maven.pkg.github.com/eclipseisoffline/customname")
             credentials {
                 username = "eclipseisoffline"
                 password = Files.readString(java.nio.file.Path.of("./github_auth"))
