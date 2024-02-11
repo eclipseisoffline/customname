@@ -15,7 +15,7 @@ It really helps me a ton!
 
 ## Usage
 
-This mod is still in development.
+This mod is still in development, but mod builds can be found [here](https://github.com/eclipseisoffline/customname/packages/2065010).
 
 The `/name` command can be used as follows:
 
