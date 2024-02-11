@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "id": "eclipsescustomname",
+  "version": "${version}",
+  "name": "Custom Name",
+  "description": "Adds a /name command to customise the appearance of your name",
+  "authors": [
+    {
+      "name": "eclipseisoffline",
+      "contact": {
+        "homepage": "https://github.com/eclipseisoffline"
+      }
+    }
+  ],
+  "contact": {
+    "website": "https://github.com/eclipseisoffline/customname",
+    "issues": "https://github.com/eclipseisoffline/customname/issues",
+    "sources": "https://github.com/eclipseisoffline/customname"
+  },
+  "license": "GPLv3",
+  "icon": "assets/eclipsescustomname/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "xyz.eclipseisoffline.eclipsescustomname.CustomName"
+    ]
+  },
+  "mixins": [
+    "eclipsescustomname.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=${loader_version}",
+    "fabric": "*",
+    "minecraft": "${minecraft_version}",
+    "fabric-permissions-api-v0": "*"
+  }
+}
