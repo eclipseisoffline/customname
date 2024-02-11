@@ -77,11 +77,23 @@ public class PlayerNameManager extends PersistentState {
     @Override
     public NbtCompound writeNbt(NbtCompound nbt) {
         NbtCompound prefixes = new NbtCompound();
-        playerPrefixes.forEach((uuid, text) -> prefixes.putString(uuid.toString(), text.getString()));
+        playerPrefixes.forEach((uuid, text) -> {
+            if (text != null) {
+                prefixes.putString(uuid.toString(), text.getString());
+            }
+        });
         NbtCompound suffixes = new NbtCompound();
-        playerSuffixes.forEach((uuid, text) -> suffixes.putString(uuid.toString(), text.getString()));
+        playerSuffixes.forEach((uuid, text) -> {
+            if (text != null) {
+                suffixes.putString(uuid.toString(), text.getString());
+            }
+        });
         NbtCompound nicknames = new NbtCompound();
-        playerNicknames.forEach((uuid, text) -> nicknames.putString(uuid.toString(), text.getString()));
+        playerNicknames.forEach((uuid, text) -> {
+            if (text != null) {
+                nicknames.putString(uuid.toString(), text.getString());
+            }
+        });
 
         nbt.put("prefixes", prefixes);
         nbt.put("suffixes", suffixes);

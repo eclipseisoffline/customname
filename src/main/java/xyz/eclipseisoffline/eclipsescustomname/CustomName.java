@@ -4,6 +4,8 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
+import net.minecraft.network.packet.s2c.play.PlayerListS2CPacket;
+import net.minecraft.network.packet.s2c.play.PlayerListS2CPacket.Action;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -29,6 +31,7 @@ public class CustomName implements ModInitializer {
                                             PlayerNameManager.getPlayerNameManager(context.getSource().getServer()).updatePlayerPrefix(player, prefix);
 
                                             context.getSource().sendFeedback(() -> Text.literal("Prefix set to ").formatted(Formatting.GOLD).append(prefix), true);
+                                            updateListName(player);
                                             return 0;
                                         }))
                                 .executes(context -> {
@@ -38,6 +41,7 @@ public class CustomName implements ModInitializer {
                                     PlayerNameManager.getPlayerNameManager(context.getSource().getServer()).updatePlayerPrefix(player, null);
 
                                     context.getSource().sendFeedback(() -> Text.literal("Prefix cleared").formatted(Formatting.GOLD), true);
+                                    updateListName(player);
                                     return 0;
                                 })
                         )
@@ -52,6 +56,7 @@ public class CustomName implements ModInitializer {
                                             PlayerNameManager.getPlayerNameManager(context.getSource().getServer()).updatePlayerSuffix(player, suffix);
 
                                             context.getSource().sendFeedback(() -> Text.literal("Suffix set to ").formatted(Formatting.GOLD).append(suffix), true);
+                                            updateListName(player);
                                             return 0;
                                         }))
                                 .executes(context -> {
@@ -61,6 +66,7 @@ public class CustomName implements ModInitializer {
                                     PlayerNameManager.getPlayerNameManager(context.getSource().getServer()).updatePlayerSuffix(player, null);
 
                                     context.getSource().sendFeedback(() -> Text.of("Suffix cleared"), true);
+                                    updateListName(player);
                                     return 0;
                                 })
                         )
@@ -75,6 +81,7 @@ public class CustomName implements ModInitializer {
                                             PlayerNameManager.getPlayerNameManager(context.getSource().getServer()).updatePlayerNickname(player, nickname);
 
                                             context.getSource().sendFeedback(() -> Text.literal("Nickname set to ").formatted(Formatting.GOLD).append(nickname), true);
+                                            updateListName(player);
                                             return 0;
                                         }))
                                 .executes(context -> {
@@ -84,6 +91,7 @@ public class CustomName implements ModInitializer {
                                     PlayerNameManager.getPlayerNameManager(context.getSource().getServer()).updatePlayerNickname(player, null);
 
                                     context.getSource().sendFeedback(() -> Text.of("Nickname cleared"), true);
+                                    updateListName(player);
                                     return 0;
                                 })
                         )
@@ -96,5 +104,10 @@ public class CustomName implements ModInitializer {
                 Formatting.FORMATTING_CODE_PREFIX));
         argument += Formatting.FORMATTING_CODE_PREFIX + "r";
         return Text.of(argument);
+    }
+
+    private void updateListName(ServerPlayerEntity player) {
+        assert player.getServer() != null;
+        player.getServer().getPlayerManager().sendToAll(new PlayerListS2CPacket(Action.UPDATE_DISPLAY_NAME, player));
     }
 }
