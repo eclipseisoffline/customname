@@ -16,6 +16,7 @@ It really helps me a ton!
 ## Usage
 
 Mod builds can be found [here](https://github.com/eclipseisoffline/customname/packages/2065010).
+
 This mod is oriented at Fabric Minecraft servers, but works on the client as well.
 This mod requires the Fabric API, and is currently only available for Minecraft 1.20.4,
 but you can make a version port request at the issue tracker.
