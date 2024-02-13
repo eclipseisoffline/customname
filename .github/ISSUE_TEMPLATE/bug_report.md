@@ -27,7 +27,7 @@ If applicable, please add screenshots to help explain your problem.
  - Minecraft version: [e.g. 1.20.4]
  - Fabric loader: [e.g. 0.15.6]
  - Fabric API version: [e.g. 0.95.4-1.20.4]
- - Cape Command version: [e.g. 0.1.0]
+ - Custom Names version: [e.g. 0.1.0-1.20.4]
  - [Any other mods you have installed, with their versions]
 
 **Logs**
