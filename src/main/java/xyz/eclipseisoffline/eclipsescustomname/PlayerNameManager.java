@@ -62,7 +62,8 @@ public class PlayerNameManager extends PersistentState {
             name.append(" ");
         }
         if (nickname != null) {
-            name.append(nickname.copy().styled(style -> style.withHoverEvent(new HoverEvent(Action.SHOW_TEXT, player.getName()))));
+            name.append(nickname.copy().styled(style -> style.withHoverEvent(
+                    new HoverEvent(Action.SHOW_TEXT, player.getName()))));
         } else {
             name.append(Team.decorateName(player.getScoreboardTeam(), player.getName()));
         }
@@ -111,14 +112,16 @@ public class PlayerNameManager extends PersistentState {
         suffixes.getKeys().forEach(key -> playerNameManager.playerSuffixes.put(UUID.fromString(key),
                 Text.of(suffixes.getString(key))));
         NbtCompound nicknames = nbtCompound.getCompound("nicknames");
-        nicknames.getKeys().forEach(key -> playerNameManager.playerNicknames.put(UUID.fromString(key),
-                Text.of(nicknames.getString(key))));
+        nicknames.getKeys()
+                .forEach(key -> playerNameManager.playerNicknames.put(UUID.fromString(key),
+                        Text.of(nicknames.getString(key))));
 
         return playerNameManager;
     }
 
     public static PlayerNameManager getPlayerNameManager(MinecraftServer server) {
-        PersistentStateManager persistentStateManager = server.getWorld(World.OVERWORLD).getPersistentStateManager();
+        PersistentStateManager persistentStateManager = server.getWorld(World.OVERWORLD)
+                .getPersistentStateManager();
         return persistentStateManager.getOrCreate(DATA_TYPE, CustomName.MOD_ID);
     }
 }

@@ -13,89 +13,133 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 
 public class CustomName implements ModInitializer {
+
     public static final String MOD_ID = "eclipsescustomname";
 
     @Override
     public void onInitialize() {
-        CommandRegistrationCallback.EVENT.register(((dispatcher, registryAccess, environment) -> dispatcher.register(
-                CommandManager.literal("name")
-                        .requires(ServerCommandSource::isExecutedByPlayer)
-                        .then(CommandManager.literal("prefix")
-                                .requires(Permissions.require("customname.prefix", 2))
-                                .then(CommandManager.argument("prefix", StringArgumentType.greedyString())
+        CommandRegistrationCallback.EVENT.register(
+                ((dispatcher, registryAccess, environment) -> dispatcher.register(
+                        CommandManager.literal("name")
+                                .requires(ServerCommandSource::isExecutedByPlayer)
+                                .then(CommandManager.literal("prefix")
+                                        .requires(Permissions.require("customname.prefix", 2))
+                                        .then(CommandManager.argument("prefix",
+                                                        StringArgumentType.greedyString())
+                                                .executes(context -> {
+                                                    ServerPlayerEntity player = context.getSource()
+                                                            .getPlayer();
+                                                    Text prefix = argumentToText(
+                                                            StringArgumentType.getString(context,
+                                                                    "prefix"));
+
+                                                    assert player != null;
+                                                    PlayerNameManager.getPlayerNameManager(
+                                                                    context.getSource().getServer())
+                                                            .updatePlayerPrefix(player, prefix);
+
+                                                    context.getSource().sendFeedback(
+                                                            () -> Text.literal("Prefix set to ")
+                                                                    .formatted(Formatting.GOLD)
+                                                                    .append(prefix), true);
+                                                    updateListName(player);
+                                                    return 0;
+                                                }))
                                         .executes(context -> {
-                                            ServerPlayerEntity player = context.getSource().getPlayer();
-                                            Text prefix = argumentToText(StringArgumentType.getString(context, "prefix"));
+                                            ServerPlayerEntity player = context.getSource()
+                                                    .getPlayer();
 
                                             assert player != null;
-                                            PlayerNameManager.getPlayerNameManager(context.getSource().getServer()).updatePlayerPrefix(player, prefix);
+                                            PlayerNameManager.getPlayerNameManager(
+                                                            context.getSource().getServer())
+                                                    .updatePlayerPrefix(player, null);
 
-                                            context.getSource().sendFeedback(() -> Text.literal("Prefix set to ").formatted(Formatting.GOLD).append(prefix), true);
+                                            context.getSource().sendFeedback(
+                                                    () -> Text.literal("Prefix cleared")
+                                                            .formatted(Formatting.GOLD), true);
                                             updateListName(player);
                                             return 0;
-                                        }))
-                                .executes(context -> {
-                                    ServerPlayerEntity player = context.getSource().getPlayer();
+                                        })
+                                )
+                                .then(CommandManager.literal("suffix")
+                                        .requires(Permissions.require("customname.suffix", 2))
+                                        .then(CommandManager.argument("suffix",
+                                                        StringArgumentType.greedyString())
+                                                .executes(context -> {
+                                                    ServerPlayerEntity player = context.getSource()
+                                                            .getPlayer();
+                                                    Text suffix = argumentToText(
+                                                            StringArgumentType.getString(context,
+                                                                    "suffix"));
 
-                                    assert player != null;
-                                    PlayerNameManager.getPlayerNameManager(context.getSource().getServer()).updatePlayerPrefix(player, null);
+                                                    assert player != null;
+                                                    PlayerNameManager.getPlayerNameManager(
+                                                                    context.getSource().getServer())
+                                                            .updatePlayerSuffix(player, suffix);
 
-                                    context.getSource().sendFeedback(() -> Text.literal("Prefix cleared").formatted(Formatting.GOLD), true);
-                                    updateListName(player);
-                                    return 0;
-                                })
-                        )
-                        .then(CommandManager.literal("suffix")
-                                .requires(Permissions.require("customname.suffix", 2))
-                                .then(CommandManager.argument("suffix", StringArgumentType.greedyString())
+                                                    context.getSource().sendFeedback(
+                                                            () -> Text.literal("Suffix set to ")
+                                                                    .formatted(Formatting.GOLD)
+                                                                    .append(suffix), true);
+                                                    updateListName(player);
+                                                    return 0;
+                                                }))
                                         .executes(context -> {
-                                            ServerPlayerEntity player = context.getSource().getPlayer();
-                                            Text suffix = argumentToText(StringArgumentType.getString(context, "suffix"));
+                                            ServerPlayerEntity player = context.getSource()
+                                                    .getPlayer();
 
                                             assert player != null;
-                                            PlayerNameManager.getPlayerNameManager(context.getSource().getServer()).updatePlayerSuffix(player, suffix);
+                                            PlayerNameManager.getPlayerNameManager(
+                                                            context.getSource().getServer())
+                                                    .updatePlayerSuffix(player, null);
 
-                                            context.getSource().sendFeedback(() -> Text.literal("Suffix set to ").formatted(Formatting.GOLD).append(suffix), true);
+                                            context.getSource().sendFeedback(
+                                                    () -> Text.literal("Suffix cleared")
+                                                            .formatted(Formatting.GOLD), true);
                                             updateListName(player);
                                             return 0;
-                                        }))
-                                .executes(context -> {
-                                    ServerPlayerEntity player = context.getSource().getPlayer();
+                                        })
+                                )
+                                .then(CommandManager.literal("nickname")
+                                        .requires(Permissions.require("customname.nick", 2))
+                                        .then(CommandManager.argument("nickname",
+                                                        StringArgumentType.greedyString())
+                                                .executes(context -> {
+                                                    ServerPlayerEntity player = context.getSource()
+                                                            .getPlayer();
+                                                    Text nickname = argumentToText(
+                                                            StringArgumentType.getString(context,
+                                                                    "nickname"));
 
-                                    assert player != null;
-                                    PlayerNameManager.getPlayerNameManager(context.getSource().getServer()).updatePlayerSuffix(player, null);
+                                                    assert player != null;
+                                                    PlayerNameManager.getPlayerNameManager(
+                                                                    context.getSource().getServer())
+                                                            .updatePlayerNickname(player, nickname);
 
-                                    context.getSource().sendFeedback(() -> Text.of("Suffix cleared"), true);
-                                    updateListName(player);
-                                    return 0;
-                                })
-                        )
-                        .then(CommandManager.literal("nickname")
-                                .requires(Permissions.require("customname.nick", 2))
-                                .then(CommandManager.argument("nickname", StringArgumentType.greedyString())
+                                                    context.getSource().sendFeedback(
+                                                            () -> Text.literal("Nickname set to ")
+                                                                    .formatted(Formatting.GOLD)
+                                                                    .append(nickname), true);
+                                                    updateListName(player);
+                                                    return 0;
+                                                }))
                                         .executes(context -> {
-                                            ServerPlayerEntity player = context.getSource().getPlayer();
-                                            Text nickname = argumentToText(StringArgumentType.getString(context, "nickname"));
+                                            ServerPlayerEntity player = context.getSource()
+                                                    .getPlayer();
 
                                             assert player != null;
-                                            PlayerNameManager.getPlayerNameManager(context.getSource().getServer()).updatePlayerNickname(player, nickname);
+                                            PlayerNameManager.getPlayerNameManager(
+                                                            context.getSource().getServer())
+                                                    .updatePlayerNickname(player, null);
 
-                                            context.getSource().sendFeedback(() -> Text.literal("Nickname set to ").formatted(Formatting.GOLD).append(nickname), true);
+                                            context.getSource().sendFeedback(
+                                                    () -> Text.literal("Nickname cleared")
+                                                            .formatted(Formatting.GOLD), true);
                                             updateListName(player);
                                             return 0;
-                                        }))
-                                .executes(context -> {
-                                    ServerPlayerEntity player = context.getSource().getPlayer();
-
-                                    assert player != null;
-                                    PlayerNameManager.getPlayerNameManager(context.getSource().getServer()).updatePlayerNickname(player, null);
-
-                                    context.getSource().sendFeedback(() -> Text.of("Nickname cleared"), true);
-                                    updateListName(player);
-                                    return 0;
-                                })
-                        )
-        )));
+                                        })
+                                )
+                )));
     }
 
     private Text argumentToText(String argument) {
@@ -108,6 +152,7 @@ public class CustomName implements ModInitializer {
 
     private void updateListName(ServerPlayerEntity player) {
         assert player.getServer() != null;
-        player.getServer().getPlayerManager().sendToAll(new PlayerListS2CPacket(Action.UPDATE_DISPLAY_NAME, player));
+        player.getServer().getPlayerManager()
+                .sendToAll(new PlayerListS2CPacket(Action.UPDATE_DISPLAY_NAME, player));
     }
 }
