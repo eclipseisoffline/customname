@@ -1,10 +1,11 @@
 package xyz.eclipseisoffline.eclipsescustomname;
 
 import com.mojang.brigadier.arguments.StringArgumentType;
-import java.util.Objects;
+import java.util.function.Predicate;
 import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.network.packet.s2c.play.PlayerListS2CPacket;
 import net.minecraft.network.packet.s2c.play.PlayerListS2CPacket.Action;
 import net.minecraft.server.command.CommandManager;
@@ -12,19 +13,29 @@ import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class CustomName implements ModInitializer {
 
     public static final String MOD_ID = "eclipsescustomname";
+    public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
+    private CustomNameConfig config;
 
     @Override
     public void onInitialize() {
+        String modVersion = String.valueOf(
+                FabricLoader.getInstance().getModContainer(MOD_ID).orElseThrow().getMetadata().getVersion());
+        LOGGER.info("Custom Names " + modVersion + " initialising");
+        LOGGER.info("Reading config");
+        config = CustomNameConfig.getInstance();
+
         CommandRegistrationCallback.EVENT.register(
                 ((dispatcher, registryAccess, environment) -> dispatcher.register(
                         CommandManager.literal("name")
                                 .requires(ServerCommandSource::isExecutedByPlayer)
                                 .then(CommandManager.literal("prefix")
-                                        .requires(Permissions.require("customname.prefix", 2))
+                                        .requires(permissionCheck("customname.prefix"))
                                         .then(CommandManager.argument("prefix",
                                                         StringArgumentType.greedyString())
                                                 .executes(context -> {
@@ -68,7 +79,7 @@ public class CustomName implements ModInitializer {
                                         })
                                 )
                                 .then(CommandManager.literal("suffix")
-                                        .requires(Permissions.require("customname.suffix", 2))
+                                        .requires(permissionCheck("customname.suffix"))
                                         .then(CommandManager.argument("suffix",
                                                         StringArgumentType.greedyString())
                                                 .executes(context -> {
@@ -112,7 +123,7 @@ public class CustomName implements ModInitializer {
                                         })
                                 )
                                 .then(CommandManager.literal("nickname")
-                                        .requires(Permissions.require("customname.nick", 2))
+                                        .requires(permissionCheck("customname.nick"))
                                         .then(CommandManager.argument("nickname",
                                                         StringArgumentType.greedyString())
                                                 .executes(context -> {
@@ -160,14 +171,25 @@ public class CustomName implements ModInitializer {
 
     private Text argumentToText(String argument) {
         argument = argument.split(" ")[0];
-        argument = argument.replaceAll("&", String.valueOf(
-                Formatting.FORMATTING_CODE_PREFIX));
-        argument += Formatting.FORMATTING_CODE_PREFIX + "r";
+        if (config.formattingEnabled()) {
+            argument = argument.replaceAll("&", String.valueOf(
+                    Formatting.FORMATTING_CODE_PREFIX));
+            argument += Formatting.FORMATTING_CODE_PREFIX + "r";
+        }
         return Text.of(argument);
     }
 
     private boolean invalidNameArgument(Text argument) {
-        return Objects.requireNonNull(Formatting.strip(argument.getString())).isEmpty();
+        String name = Formatting.strip(argument.getString());
+        assert name != null;
+        return name.isEmpty() || config.nameBlacklisted(name);
+    }
+
+    private Predicate<ServerCommandSource> permissionCheck(String permission) {
+        if (config.requirePermissions()) {
+            return Permissions.require(permission, 2);
+        }
+        return (source) -> true;
     }
 
     private void updateListName(ServerPlayerEntity player) {
