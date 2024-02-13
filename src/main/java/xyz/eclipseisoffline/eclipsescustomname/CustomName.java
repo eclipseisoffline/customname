@@ -1,6 +1,7 @@
 package xyz.eclipseisoffline.eclipsescustomname;
 
 import com.mojang.brigadier.arguments.StringArgumentType;
+import java.util.Objects;
 import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
@@ -32,6 +33,11 @@ public class CustomName implements ModInitializer {
                                                     Text prefix = argumentToText(
                                                             StringArgumentType.getString(context,
                                                                     "prefix"));
+
+                                                    if (invalidNameArgument(prefix)) {
+                                                        context.getSource().sendError(Text.of("That prefix is invalid"));
+                                                        return 1;
+                                                    }
 
                                                     assert player != null;
                                                     PlayerNameManager.getPlayerNameManager(
@@ -72,6 +78,11 @@ public class CustomName implements ModInitializer {
                                                             StringArgumentType.getString(context,
                                                                     "suffix"));
 
+                                                    if (invalidNameArgument(suffix)) {
+                                                        context.getSource().sendError(Text.of("That suffix is invalid"));
+                                                        return 1;
+                                                    }
+
                                                     assert player != null;
                                                     PlayerNameManager.getPlayerNameManager(
                                                                     context.getSource().getServer())
@@ -111,6 +122,11 @@ public class CustomName implements ModInitializer {
                                                             StringArgumentType.getString(context,
                                                                     "nickname"));
 
+                                                    if (invalidNameArgument(nickname)) {
+                                                        context.getSource().sendError(Text.of("That nickname is invalid"));
+                                                        return 1;
+                                                    }
+
                                                     assert player != null;
                                                     PlayerNameManager.getPlayerNameManager(
                                                                     context.getSource().getServer())
@@ -148,6 +164,10 @@ public class CustomName implements ModInitializer {
                 Formatting.FORMATTING_CODE_PREFIX));
         argument += Formatting.FORMATTING_CODE_PREFIX + "r";
         return Text.of(argument);
+    }
+
+    private boolean invalidNameArgument(Text argument) {
+        return Objects.requireNonNull(Formatting.strip(argument.getString())).isEmpty();
     }
 
     private void updateListName(ServerPlayerEntity player) {
