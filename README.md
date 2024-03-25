@@ -1,6 +1,7 @@
 # Custom Names
 
-This mod adds a `/name` command to Minecraft, which players can use to set a prefix, suffix, or nickname.
+This mod adds a `/name` and a `/itemname` command to Minecraft, which players can use to set a prefix, suffix, or nickname,
+or give their items colourful names. Mostly designed to be used in small, private servers.
 
 Feel free to report any bugs, or suggest new features, at the issue tracker.
 
@@ -15,7 +16,7 @@ It really helps me a ton!
 
 ## Usage
 
-Mod builds can be found [here](https://github.com/eclipseisoffline/customname/packages/2065010).
+Mod builds can be found [here](https://github.com/eclipseisoffline/customname/packages/2065010) and on [Modrinth](https://modrinth.com/mod/fabric-custom-names).
 
 This mod is oriented at Fabric Minecraft servers, but works on the client as well.
 This mod requires the Fabric API, and is currently only available for Minecraft 1.20.4,
@@ -30,8 +31,12 @@ The `/name` command can be used as follows:
 - `/name nickname` - sets a nickname that will appear instead of your IGN. When hovered above this nickname, your IGN will show. When no nickname is given, clears your nickname.
   - Requires operator or the `customname.nick` permission.
 
+The `/itemname` command can be used to rename the item you're currently holding. Requires operator or the `customname.itemname` permission.
+
 Minecraft's [formatting codes](https://minecraft.wiki/w/Formatting_codes) can be used to format your prefix, suffix or nickname.
-Instead of the `§` character, use `&`. A useful tool to easily create formatted names is available [here](https://codepen.io/0biwan/pen/ggVemP).
+Instead of the `§` character, use `&`. Alongside Minecraft's default formatting codes, the `&#<hex code>` format can be used as well.
+
+Useful tools to easily create formatted names are available [here](http://mcnick.surge.sh/) and [here](https://nickgen.netlify.app/).
 Usage of formatting codes in names can be disabled in the config file.
 
 ## Config file
@@ -48,5 +53,5 @@ By default, the configuration file looks like this:
 ```
 
 - `enable_formatting` can be used to disable the use of Minecraft formatting codes in names.
-- `require_permissions` can be used to disable the permission requirement. When set to `false`, the `/name` command is available to everyone.
+- `require_permissions` can be used to disable the permission requirement. When set to `false`, the `/name` and `/itemname` commands are available to everyone.
 - `blacklisted_names` is a list of regexes that are blacklisted. When a prefix, suffix or nickname matches one of these regexes, they won't be able to be used.

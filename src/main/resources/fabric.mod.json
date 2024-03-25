@@ -3,7 +3,7 @@
   "id": "eclipsescustomname",
   "version": "${version}",
   "name": "Custom Name",
-  "description": "Adds a /name command to customise the appearance of your name",
+  "description": "Adds a /name command to customise the appearance of your name, and a /itemname command to give your items colourful names",
   "authors": [
     {
       "name": "eclipseisoffline",
@@ -13,7 +13,7 @@
     }
   ],
   "contact": {
-    "website": "https://github.com/eclipseisoffline/customname",
+    "website": "https://modrinth.com/mod/fabric-custom-names",
     "issues": "https://github.com/eclipseisoffline/customname/issues",
     "sources": "https://github.com/eclipseisoffline/customname"
   },
@@ -33,5 +33,14 @@
     "fabric": "*",
     "minecraft": "${minecraft_version}",
     "fabric-permissions-api-v0": "*"
+  },
+  "custom": {
+    "modmenu": {
+      "links": {
+        "modmenu.donate": "https://ko-fi.com/eclipseisoffline",
+        "modmenu.kofi": "https://ko-fi.com/eclipseisoffline",
+        "modmenu.modrinth": "https://modrinth.com/mod/fabric-custom-names"
+      }
+    }
   }
 }
