@@ -16,7 +16,9 @@ import java.util.regex.PatternSyntaxException;
 import net.fabricmc.loader.api.FabricLoader;
 
 public class CustomNameConfig {
-    private static final CustomNameConfig DEFAULT_CONFIG = new CustomNameConfig(true, true, List.of());
+
+    private static final CustomNameConfig DEFAULT_CONFIG = new CustomNameConfig(true, true,
+            List.of());
     private static final Path CONFIG_FILE = Path.of(CustomName.MOD_ID + ".json");
 
     private final boolean enableFormatting;
@@ -85,7 +87,8 @@ public class CustomNameConfig {
             boolean enableFormatting = configJson.get("enable_formatting").getAsBoolean();
             boolean requirePermissions = configJson.get("require_permissions").getAsBoolean();
             List<String> blacklistedNames = configJson
-                    .getAsJsonArray("blacklisted_names").asList().stream().map(JsonElement::getAsString).toList();
+                    .getAsJsonArray("blacklisted_names").asList().stream()
+                    .map(JsonElement::getAsString).toList();
 
             List<Pattern> finalBlacklisted = new ArrayList<>();
             for (String blacklisted : blacklistedNames) {

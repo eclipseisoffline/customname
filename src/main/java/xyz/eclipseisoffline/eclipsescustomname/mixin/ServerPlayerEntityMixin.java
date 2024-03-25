@@ -32,10 +32,4 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntity {
         callbackInfoReturnable.setReturnValue(PlayerNameManager.getPlayerNameManager(server)
                 .getFullPlayerName((ServerPlayerEntity) (Object) this));
     }
-
-    @Override
-    public Text getDisplayName() {
-        return PlayerNameManager.getPlayerNameManager(server)
-                .getFullPlayerName((ServerPlayerEntity) (Object) this);
-    }
 }

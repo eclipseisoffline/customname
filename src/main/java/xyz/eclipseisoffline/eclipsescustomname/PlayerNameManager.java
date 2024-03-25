@@ -1,5 +1,7 @@
 package xyz.eclipseisoffline.eclipsescustomname;
 
+import com.google.gson.JsonParseException;
+import com.google.gson.JsonParser;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -11,6 +13,7 @@ import net.minecraft.text.HoverEvent;
 import net.minecraft.text.HoverEvent.Action;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
+import net.minecraft.util.Formatting;
 import net.minecraft.world.PersistentState;
 import net.minecraft.world.PersistentStateManager;
 import net.minecraft.world.World;
@@ -24,18 +27,12 @@ public class PlayerNameManager extends PersistentState {
     private final Map<UUID, Text> playerNicknames = new HashMap<>();
     private final Map<UUID, Text> fullPlayerNames = new HashMap<>();
 
-    public void updatePlayerPrefix(ServerPlayerEntity player, Text prefix) {
-        playerPrefixes.put(player.getUuid(), prefix);
-        markDirty(player);
-    }
-
-    public void updatePlayerSuffix(ServerPlayerEntity player, Text suffix) {
-        playerSuffixes.put(player.getUuid(), suffix);
-        markDirty(player);
-    }
-
-    public void updatePlayerNickname(ServerPlayerEntity player, Text nickname) {
-        playerNicknames.put(player.getUuid(), nickname);
+    public void updatePlayerName(ServerPlayerEntity player, Text name, NameType type) {
+        switch (type) {
+            case PREFIX -> playerPrefixes.put(player.getUuid(), name);
+            case SUFFIX -> playerSuffixes.put(player.getUuid(), name);
+            case NICKNAME -> playerNicknames.put(player.getUuid(), name);
+        }
         markDirty(player);
     }
 
@@ -77,51 +74,76 @@ public class PlayerNameManager extends PersistentState {
 
     @Override
     public NbtCompound writeNbt(NbtCompound nbt) {
-        NbtCompound prefixes = new NbtCompound();
-        playerPrefixes.forEach((uuid, text) -> {
-            if (text != null) {
-                prefixes.putString(uuid.toString(), text.getString());
-            }
-        });
-        NbtCompound suffixes = new NbtCompound();
-        playerSuffixes.forEach((uuid, text) -> {
-            if (text != null) {
-                suffixes.putString(uuid.toString(), text.getString());
-            }
-        });
-        NbtCompound nicknames = new NbtCompound();
-        playerNicknames.forEach((uuid, text) -> {
-            if (text != null) {
-                nicknames.putString(uuid.toString(), text.getString());
-            }
-        });
-
-        nbt.put("prefixes", prefixes);
-        nbt.put("suffixes", suffixes);
-        nbt.put("nicknames", nicknames);
+        nbt.put("prefixes", writeNames(playerPrefixes));
+        nbt.put("suffixes", writeNames(playerSuffixes));
+        nbt.put("nicknames", writeNames(playerNicknames));
         return nbt;
+    }
+
+    private static NbtCompound writeNames(Map<UUID, Text> names) {
+        NbtCompound namesTag = new NbtCompound();
+        names.forEach((uuid, text) -> {
+            if (text != null) {
+                namesTag.putString(uuid.toString(), Text.Serialization.toJsonString(text));
+            }
+        });
+        return namesTag;
     }
 
     public static PlayerNameManager loadFromNbt(NbtCompound nbtCompound) {
         PlayerNameManager playerNameManager = new PlayerNameManager();
 
         NbtCompound prefixes = nbtCompound.getCompound("prefixes");
-        prefixes.getKeys().forEach(key -> playerNameManager.playerPrefixes.put(UUID.fromString(key),
-                Text.of(prefixes.getString(key))));
+        readNames(prefixes, playerNameManager.playerPrefixes);
         NbtCompound suffixes = nbtCompound.getCompound("suffixes");
-        suffixes.getKeys().forEach(key -> playerNameManager.playerSuffixes.put(UUID.fromString(key),
-                Text.of(suffixes.getString(key))));
+        readNames(suffixes, playerNameManager.playerSuffixes);
         NbtCompound nicknames = nbtCompound.getCompound("nicknames");
-        nicknames.getKeys()
-                .forEach(key -> playerNameManager.playerNicknames.put(UUID.fromString(key),
-                        Text.of(nicknames.getString(key))));
+        readNames(nicknames, playerNameManager.playerNicknames);
 
         return playerNameManager;
+    }
+
+    private static void readNames(NbtCompound compound, Map<UUID, Text> nameMap) {
+        compound.getKeys().forEach(key -> {
+            Text name;
+            String raw = compound.getString(key);
+            boolean old;
+            try {
+                old = !JsonParser.parseString(raw).isJsonObject();
+            } catch (JsonParseException exception) {
+                old = true;
+            }
+            if (old) {
+                CustomName.LOGGER.info("Converting old name of " + key + " to new format");
+                name = CustomName.argumentToText(raw.replaceAll("\"", "").replaceAll(
+                                String.valueOf(Formatting.FORMATTING_CODE_PREFIX), "&"), true, false,
+                        false);
+            } else {
+                name = Text.Serialization.fromJson(compound.getString(key));
+            }
+            nameMap.put(UUID.fromString(key), name);
+        });
     }
 
     public static PlayerNameManager getPlayerNameManager(MinecraftServer server) {
         PersistentStateManager persistentStateManager = server.getWorld(World.OVERWORLD)
                 .getPersistentStateManager();
         return persistentStateManager.getOrCreate(DATA_TYPE, CustomName.MOD_ID);
+    }
+
+    public enum NameType {
+        PREFIX("Prefix"),
+        SUFFIX("Suffix"),
+        NICKNAME("Nickname");
+
+        private final String displayName;
+
+        NameType(String displayName) {
+            this.displayName = displayName;
+        }
+
+        public String getDisplayName() {
+            return displayName;
+        }
     }
 }
