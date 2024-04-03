@@ -17,8 +17,6 @@ import net.minecraft.world.World;
 
 public class PlayerNameManager extends PersistentState {
 
-    private static final Type<PlayerNameManager> DATA_TYPE = new Type<>(PlayerNameManager::new,
-            PlayerNameManager::loadFromNbt, null);
     private final Map<UUID, Text> playerPrefixes = new HashMap<>();
     private final Map<UUID, Text> playerSuffixes = new HashMap<>();
     private final Map<UUID, Text> playerNicknames = new HashMap<>();
@@ -80,7 +78,7 @@ public class PlayerNameManager extends PersistentState {
         NbtCompound namesTag = new NbtCompound();
         names.forEach((uuid, text) -> {
             if (text != null) {
-                namesTag.putString(uuid.toString(), Text.Serialization.toJsonString(text));
+                namesTag.putString(uuid.toString(), Text.Serializer.toJson(text));
             }
         });
         return namesTag;
@@ -115,7 +113,7 @@ public class PlayerNameManager extends PersistentState {
                                 String.valueOf(Formatting.FORMATTING_CODE_PREFIX), "&"), true, false,
                         false);
             } else {
-                name = Text.Serialization.fromJson(compound.getString(key));
+                name = Text.Serializer.fromJson(compound.getString(key));
             }
             nameMap.put(UUID.fromString(key), name);
         });
@@ -124,7 +122,8 @@ public class PlayerNameManager extends PersistentState {
     public static PlayerNameManager getPlayerNameManager(MinecraftServer server) {
         PersistentStateManager persistentStateManager = server.getWorld(World.OVERWORLD)
                 .getPersistentStateManager();
-        return persistentStateManager.getOrCreate(DATA_TYPE, CustomName.MOD_ID);
+        return persistentStateManager.getOrCreate(PlayerNameManager::loadFromNbt,
+                PlayerNameManager::new, CustomName.MOD_ID);
     }
 
     public enum NameType {
