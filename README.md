@@ -19,8 +19,8 @@ It really helps me a ton!
 Mod builds can be found [here](https://github.com/eclipseisoffline/customname/packages/2065010) and on [Modrinth](https://modrinth.com/mod/fabric-custom-names).
 
 This mod is oriented at Fabric Minecraft servers, but works on the client as well.
-This mod requires the Fabric API, and is currently only available for Minecraft 1.20.4,
-but you can make a version port request at the issue tracker.
+This mod requires the Fabric API, and is currently available for Minecraft 1.20.4 and 1.20.1.
+You can make a version port request at the issue tracker.
 
 The `/name` command can be used as follows:
 
