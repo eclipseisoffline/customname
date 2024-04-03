@@ -59,10 +59,9 @@ public class PlayerNameManager extends PersistentState {
             name.append(" ");
         }
         if (nickname != null) {
-            name.append(nickname.copy().styled(style -> style.withHoverEvent(
-                    new HoverEvent(Action.SHOW_TEXT, player.getName()))));
+            name.append(nickname);
         } else {
-            name.append(Team.decorateName(player.getScoreboardTeam(), player.getName()));
+            name.append(player.getName());
         }
         if (suffix != null) {
             name.append(" ");
