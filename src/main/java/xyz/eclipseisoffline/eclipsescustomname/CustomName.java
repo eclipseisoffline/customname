@@ -196,6 +196,7 @@ public class CustomName implements ModInitializer {
             try {
                 int c = argumentReader.read();
                 boolean formatting = false;
+                boolean wasFormatting = false;
                 while (c != -1) {
                     char current = (char) c;
 
@@ -232,15 +233,17 @@ public class CustomName implements ModInitializer {
                         if (newStyle == null) {
                             throw new IllegalArgumentException("Invalid formatting code");
                         }
-                        if (newStyle.isColor() || newStyle == Formatting.RESET) {
+                        if (newStyle.isColor() || newStyle == Formatting.RESET || !wasFormatting) {
                             complete.append(currentText);
                             currentText = Text.empty();
                             if (forceItalics) {
                                 currentText = currentText.styled(style -> style.withItalic(false));
                             }
                         }
+                        wasFormatting = true;
                         currentText.styled(style -> style.withFormatting(newStyle));
                     } else {
+                        wasFormatting = false;
                         currentText.append(String.valueOf(current));
                     }
 
