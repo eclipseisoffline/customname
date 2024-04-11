@@ -102,9 +102,7 @@ public class CustomName implements ModInitializer {
                                                             Text.of("Invalid item name")).create();
                                                 }
 
-                                                holding.applyChanges(ComponentChanges.builder()
-                                                        .add(DataComponentTypes.CUSTOM_NAME, argument)
-                                                        .build());
+                                                holding.set(DataComponentTypes.CUSTOM_NAME, argument);
                                                 context.getSource().sendFeedback(
                                                         () -> Text.literal("Set item name to ")
                                                                 .append(argument), true);
