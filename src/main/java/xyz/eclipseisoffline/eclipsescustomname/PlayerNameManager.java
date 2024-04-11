@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import net.minecraft.nbt.NbtCompound;
+import net.minecraft.registry.RegistryWrapper;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.MutableText;
@@ -69,37 +70,38 @@ public class PlayerNameManager extends PersistentState {
     }
 
     @Override
-    public NbtCompound writeNbt(NbtCompound nbt) {
-        nbt.put("prefixes", writeNames(playerPrefixes));
-        nbt.put("suffixes", writeNames(playerSuffixes));
-        nbt.put("nicknames", writeNames(playerNicknames));
+    public NbtCompound writeNbt(NbtCompound nbt, RegistryWrapper.WrapperLookup registries) {
+        nbt.put("prefixes", writeNames(playerPrefixes, registries));
+        nbt.put("suffixes", writeNames(playerSuffixes, registries));
+        nbt.put("nicknames", writeNames(playerNicknames, registries));
         return nbt;
     }
 
-    private static NbtCompound writeNames(Map<UUID, Text> names) {
+    private static NbtCompound writeNames(Map<UUID, Text> names, RegistryWrapper.WrapperLookup registries) {
         NbtCompound namesTag = new NbtCompound();
         names.forEach((uuid, text) -> {
             if (text != null) {
-                namesTag.putString(uuid.toString(), Text.Serialization.toJsonString(text));
+                namesTag.putString(uuid.toString(), Text.Serialization.toJsonString(text, registries));
             }
         });
         return namesTag;
     }
 
-    public static PlayerNameManager loadFromNbt(NbtCompound nbtCompound) {
+    public static PlayerNameManager loadFromNbt(NbtCompound nbtCompound, RegistryWrapper.WrapperLookup registries) {
         PlayerNameManager playerNameManager = new PlayerNameManager();
 
         NbtCompound prefixes = nbtCompound.getCompound("prefixes");
-        readNames(prefixes, playerNameManager.playerPrefixes);
+        readNames(prefixes, playerNameManager.playerPrefixes, registries);
         NbtCompound suffixes = nbtCompound.getCompound("suffixes");
-        readNames(suffixes, playerNameManager.playerSuffixes);
+        readNames(suffixes, playerNameManager.playerSuffixes, registries);
         NbtCompound nicknames = nbtCompound.getCompound("nicknames");
-        readNames(nicknames, playerNameManager.playerNicknames);
+        readNames(nicknames, playerNameManager.playerNicknames, registries);
 
         return playerNameManager;
     }
 
-    private static void readNames(NbtCompound compound, Map<UUID, Text> nameMap) {
+    private static void readNames(NbtCompound compound, Map<UUID, Text> nameMap,
+            RegistryWrapper.WrapperLookup registries) {
         compound.getKeys().forEach(key -> {
             Text name;
             String raw = compound.getString(key);
@@ -115,7 +117,7 @@ public class PlayerNameManager extends PersistentState {
                                 String.valueOf(Formatting.FORMATTING_CODE_PREFIX), "&"), true, false,
                         false);
             } else {
-                name = Text.Serialization.fromJson(compound.getString(key));
+                name = Text.Serialization.fromJson(compound.getString(key), registries);
             }
             nameMap.put(UUID.fromString(key), name);
         });
