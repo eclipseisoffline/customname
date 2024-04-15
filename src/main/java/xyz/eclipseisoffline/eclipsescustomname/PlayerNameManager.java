@@ -4,7 +4,9 @@ import com.google.gson.JsonParseException;
 import com.google.gson.JsonParser;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
+import me.lucko.fabric.api.permissions.v0.Options;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -46,11 +48,20 @@ public class PlayerNameManager extends PersistentState {
     }
 
     private void updateFullPlayerName(ServerPlayerEntity player) {
+        Optional<String> permissionsPrefix = Options.get(player, "prefix");
         Text prefix = playerPrefixes.get(player.getUuid());
         Text suffix = playerSuffixes.get(player.getUuid());
+        Optional<String> permissionsSuffix = Options.get(player, "suffix");
         Text nickname = playerNicknames.get(player.getUuid());
 
         MutableText name = Text.literal("");
+        if (permissionsPrefix.isPresent()) {
+            name.append(CustomName
+                    .argumentToText(permissionsPrefix.orElseThrow(),
+                            CustomNameConfig.getInstance().formattingEnabled(),
+                            true, false));
+            name.append(" ");
+        }
         if (prefix != null) {
             name.append(prefix);
             name.append(" ");
@@ -63,6 +74,13 @@ public class PlayerNameManager extends PersistentState {
         if (suffix != null) {
             name.append(" ");
             name.append(suffix);
+        }
+        if (permissionsSuffix.isPresent()) {
+            name.append(" ");
+            name.append(CustomName
+                    .argumentToText(permissionsSuffix.orElseThrow(),
+                            CustomNameConfig.getInstance().formattingEnabled(),
+                            true, false));
         }
 
         fullPlayerNames.put(player.getUuid(), name);
