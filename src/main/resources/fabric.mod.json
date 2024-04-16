@@ -34,6 +34,9 @@
     "minecraft": "${minecraft_version}",
     "fabric-permissions-api-v0": "*"
   },
+  "suggests": {
+    "luckperms": "*"
+  },
   "custom": {
     "modmenu": {
       "links": {
