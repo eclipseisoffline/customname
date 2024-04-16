@@ -4,9 +4,11 @@ import com.google.gson.JsonParseException;
 import com.google.gson.JsonParser;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 import java.util.UUID;
-import me.lucko.fabric.api.permissions.v0.Options;
+import net.luckperms.api.LuckPerms;
+import net.luckperms.api.LuckPermsProvider;
+import net.luckperms.api.event.user.UserDataRecalculateEvent;
+import net.luckperms.api.model.user.User;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.registry.RegistryWrapper;
 import net.minecraft.server.MinecraftServer;
@@ -19,13 +21,34 @@ import net.minecraft.world.PersistentStateManager;
 import net.minecraft.world.World;
 
 public class PlayerNameManager extends PersistentState {
-
-    private static final Type<PlayerNameManager> DATA_TYPE = new Type<>(PlayerNameManager::new,
-            PlayerNameManager::loadFromNbt, null);
     private final Map<UUID, Text> playerPrefixes = new HashMap<>();
     private final Map<UUID, Text> playerSuffixes = new HashMap<>();
     private final Map<UUID, Text> playerNicknames = new HashMap<>();
     private final Map<UUID, Text> fullPlayerNames = new HashMap<>();
+    private final LuckPerms luckPerms;
+
+    private PlayerNameManager(MinecraftServer server) {
+        LuckPerms luckPerms;
+        String luckPermsState = "found";
+        try {
+            luckPerms = LuckPermsProvider.get();
+            luckPerms.getEventBus().subscribe(UserDataRecalculateEvent.class, event -> {
+                UUID uuid = event.getUser().getUniqueId();
+                fullPlayerNames.remove(uuid);
+
+                ServerPlayerEntity player = server.getPlayerManager().getPlayer(uuid);
+                if (player != null) {
+                    CustomName.updateListName(player);
+                }
+            });
+        } catch (NoClassDefFoundError | IllegalStateException exception) {
+            luckPerms = null;
+            luckPermsState = "not found";
+        }
+        this.luckPerms = luckPerms;
+
+        CustomName.LOGGER.info("Creating player name mappings - LuckPerms {}!", luckPermsState);
+    }
 
     public void updatePlayerName(ServerPlayerEntity player, Text name, NameType type) {
         switch (type) {
@@ -53,16 +76,25 @@ public class PlayerNameManager extends PersistentState {
     }
 
     private void updateFullPlayerName(ServerPlayerEntity player) {
-        Optional<String> permissionsPrefix = Options.get(player, "prefix");
+        String permissionsPrefix = null;
+        String permissionsSuffix = null;
+
+        if (luckPerms != null) {
+            User luckPermsUser = luckPerms.getUserManager().getUser(player.getUuid());
+            if (luckPermsUser != null) {
+                permissionsPrefix = luckPermsUser.getCachedData().getMetaData().getPrefix();
+                permissionsSuffix = luckPermsUser.getCachedData().getMetaData().getSuffix();
+            }
+        }
+
         Text prefix = playerPrefixes.get(player.getUuid());
         Text suffix = playerSuffixes.get(player.getUuid());
-        Optional<String> permissionsSuffix = Options.get(player, "suffix");
         Text nickname = playerNicknames.get(player.getUuid());
 
         MutableText name = Text.literal("");
-        if (permissionsPrefix.isPresent()) {
+        if (permissionsPrefix != null) {
             name.append(CustomName
-                    .argumentToText(permissionsPrefix.orElseThrow(),
+                    .argumentToText(permissionsPrefix,
                             CustomNameConfig.getInstance().formattingEnabled(),
                             true, false));
             name.append(" ");
@@ -80,10 +112,10 @@ public class PlayerNameManager extends PersistentState {
             name.append(" ");
             name.append(suffix);
         }
-        if (permissionsSuffix.isPresent()) {
+        if (permissionsSuffix != null) {
             name.append(" ");
             name.append(CustomName
-                    .argumentToText(permissionsSuffix.orElseThrow(),
+                    .argumentToText(permissionsSuffix,
                             CustomNameConfig.getInstance().formattingEnabled(),
                             true, false));
         }
@@ -109,8 +141,9 @@ public class PlayerNameManager extends PersistentState {
         return namesTag;
     }
 
-    public static PlayerNameManager loadFromNbt(NbtCompound nbtCompound, RegistryWrapper.WrapperLookup registries) {
-        PlayerNameManager playerNameManager = new PlayerNameManager();
+    public static PlayerNameManager loadFromNbt(NbtCompound nbtCompound,
+            RegistryWrapper.WrapperLookup registries, MinecraftServer server) {
+        PlayerNameManager playerNameManager = new PlayerNameManager(server);
 
         NbtCompound prefixes = nbtCompound.getCompound("prefixes");
         readNames(prefixes, playerNameManager.playerPrefixes, registries);
@@ -148,7 +181,10 @@ public class PlayerNameManager extends PersistentState {
     public static PlayerNameManager getPlayerNameManager(MinecraftServer server) {
         PersistentStateManager persistentStateManager = server.getWorld(World.OVERWORLD)
                 .getPersistentStateManager();
-        return persistentStateManager.getOrCreate(DATA_TYPE, CustomName.MOD_ID);
+        return persistentStateManager.getOrCreate(new Type<>(
+                () -> new PlayerNameManager(server),
+                        (nbt, registries) -> loadFromNbt(nbt, registries, server), null),
+                CustomName.MOD_ID);
     }
 
     public enum NameType {
