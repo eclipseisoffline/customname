@@ -168,12 +168,6 @@ public class CustomName implements ModInitializer {
         return (source) -> true;
     }
 
-    private void updateListName(ServerPlayerEntity player) {
-        assert player.getServer() != null;
-        player.getServer().getPlayerManager()
-                .sendToAll(new PlayerListS2CPacket(Action.UPDATE_DISPLAY_NAME, player));
-    }
-
     private Text argumentToText(String argument) {
         return argumentToText(argument, config.formattingEnabled(), false, false);
     }
@@ -257,5 +251,11 @@ public class CustomName implements ModInitializer {
             return complete;
         }
         return Text.of(argument);
+    }
+
+    public static void updateListName(ServerPlayerEntity player) {
+        assert player.getServer() != null;
+        player.getServer().getPlayerManager()
+                .sendToAll(new PlayerListS2CPacket(Action.UPDATE_DISPLAY_NAME, player));
     }
 }
