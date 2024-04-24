@@ -41,6 +41,8 @@ Instead of the `§` character, use `&`. Alongside Minecraft's default formatting
 Useful tools to easily create formatted names are available [here](http://mcnick.surge.sh/) and [here](https://nickgen.netlify.app/).
 Usage of formatting codes in names can be disabled in the config file.
 
+Alongside the `/name` command, this mod also supports reading prefixes and suffixes from the LuckPerms mod.
+
 ## Config file
 
 The mod's configuration file is present in `{root config directory}/eclipsescustomname.json`.
