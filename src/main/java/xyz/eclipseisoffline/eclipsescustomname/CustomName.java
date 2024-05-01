@@ -108,7 +108,7 @@ public class CustomName implements ModInitializer {
 
                                                 holding.setCustomName(argument);
                                                 context.getSource().sendFeedback(
-                                                        () -> Text.literal("Set item name to ")
+                                                        Text.literal("Set item name to ")
                                                                 .append(argument), true);
 
                                                 return 0;
@@ -138,7 +138,7 @@ public class CustomName implements ModInitializer {
                     .updatePlayerName(player, name, nameType);
 
             context.getSource().sendFeedback(
-                    () -> Text.literal(nameType.getDisplayName() + " set to ")
+                    Text.literal(nameType.getDisplayName() + " set to ")
                             .formatted(Formatting.GOLD)
                             .append(name), true);
             updateListName(player);
@@ -154,7 +154,7 @@ public class CustomName implements ModInitializer {
                     .updatePlayerName(player, null, nameType);
 
             context.getSource().sendFeedback(
-                    () -> Text.literal(nameType.getDisplayName() + " cleared")
+                    Text.literal(nameType.getDisplayName() + " cleared")
                             .formatted(Formatting.GOLD), true);
             updateListName(player);
             return 0;
