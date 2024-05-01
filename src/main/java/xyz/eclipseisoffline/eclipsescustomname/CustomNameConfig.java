@@ -6,6 +6,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.google.gson.reflect.TypeToken;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -86,9 +87,10 @@ public class CustomNameConfig {
             JsonObject configJson = JsonParser.parseString(config).getAsJsonObject();
             boolean enableFormatting = configJson.get("enable_formatting").getAsBoolean();
             boolean requirePermissions = configJson.get("require_permissions").getAsBoolean();
-            List<String> blacklistedNames = configJson
-                    .getAsJsonArray("blacklisted_names").asList().stream()
-                    .map(JsonElement::getAsString).toList();
+
+            List<String> blacklistedNames = new Gson().fromJson(configJson
+                            .getAsJsonArray("blacklisted_names"),
+                    new TypeToken<List<String>>(){}.getType());
 
             List<Pattern> finalBlacklisted = new ArrayList<>();
             for (String blacklisted : blacklistedNames) {
