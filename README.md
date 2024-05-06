@@ -1,7 +1,7 @@
 # Custom Names
 
-This mod adds a `/name` and a `/itemname` command to Minecraft, which players can use to set a prefix, suffix, or nickname,
-or give their items colourful names. Mostly designed to be used in small, private servers.
+This mod adds a `/name`, a `/itemname` and a `/itemlore` command to Minecraft, which players can use to set a prefix, suffix, or nickname,
+or give their items colourful names and lore. Mostly designed to be used in small, private servers.
 
 Supports prefixes/suffixes set with LuckPerms as well! 
 
