@@ -5,11 +5,14 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import java.io.IOException;
 import java.io.StringReader;
+import java.util.List;
 import java.util.function.Predicate;
 import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.loader.api.FabricLoader;
+import net.minecraft.component.DataComponentTypes;
+import net.minecraft.component.type.LoreComponent;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.packet.s2c.play.PlayerListS2CPacket;
 import net.minecraft.network.packet.s2c.play.PlayerListS2CPacket.Action;
@@ -106,9 +109,51 @@ public class CustomName implements ModInitializer {
                                                             Text.of("Invalid item name")).create();
                                                 }
 
-                                                holding.setCustomName(argument);
+                                                holding.set(DataComponentTypes.CUSTOM_NAME, argument);
                                                 context.getSource().sendFeedback(
                                                         () -> Text.literal("Set item name to ")
+                                                                .append(argument), true);
+
+                                                return 0;
+                                            })
+                                    )
+                    );
+
+                    dispatcher.register(
+                            CommandManager.literal("itemlore")
+                                    .requires(ServerCommandSource::isExecutedByPlayer)
+                                    .requires(permissionCheck("customname.itemlore"))
+                                    .requires(source -> config.formattingEnabled())
+                                    .then(CommandManager.argument("lore",
+                                                    StringArgumentType.greedyString())
+                                            .executes(context -> {
+                                                ServerPlayerEntity player = context.getSource()
+                                                        .getPlayerOrThrow();
+
+                                                ItemStack holding = player.getStackInHand(
+                                                        Hand.MAIN_HAND);
+
+                                                if (holding.isEmpty()) {
+                                                    throw new SimpleCommandExceptionType(
+                                                            Text.of("Must hold an item to set lore of")).create();
+                                                }
+
+                                                Text argument;
+                                                try {
+                                                    argument = argumentToText(
+                                                            StringArgumentType.getString(context,
+                                                                    "lore"), true, true, true);
+                                                } catch (IllegalArgumentException exception) {
+                                                    throw new SimpleCommandExceptionType(Text.of(exception.getMessage())).create();
+                                                }
+                                                if (Formatting.strip(argument.getString()).isEmpty()) {
+                                                    throw new SimpleCommandExceptionType(
+                                                            Text.of("Invalid item lore")).create();
+                                                }
+
+                                                holding.set(DataComponentTypes.LORE, new LoreComponent(List.of(argument)));
+                                                context.getSource().sendFeedback(
+                                                        () -> Text.literal("Set item lore to ")
                                                                 .append(argument), true);
 
                                                 return 0;
