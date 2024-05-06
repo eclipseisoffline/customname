@@ -34,8 +34,9 @@ The `/name` command can be used as follows:
   - Requires operator or the `customname.nick` permission.
 
 The `/itemname` command can be used to rename the item you're currently holding. Requires operator or the `customname.itemname` permission.
+Similarly, the `/itemlore` can be used to set the lore of an item you're holding. Requires operator or the `customname.itemlore` permission.
 
-Minecraft's [formatting codes](https://minecraft.wiki/w/Formatting_codes) can be used to format your prefix, suffix or nickname.
+Minecraft's [formatting codes](https://minecraft.wiki/w/Formatting_codes) can be used to format your prefix, suffix, nickname, or your item names/lores.
 Instead of the `§` character, use `&`. Alongside Minecraft's default formatting codes, the `&#<hex code>` format can be used as well.
 
 Useful tools to easily create formatted names are available [here](http://mcnick.surge.sh/) and [here](https://nickgen.netlify.app/).
@@ -57,5 +58,5 @@ By default, the configuration file looks like this:
 ```
 
 - `enable_formatting` can be used to disable the use of Minecraft formatting codes in names.
-- `require_permissions` can be used to disable the permission requirement. When set to `false`, the `/name` and `/itemname` commands are available to everyone.
+- `require_permissions` can be used to disable the permission requirement. When set to `false`, the `/name`, `/itemname` and `/itemlore` commands are available to everyone.
 - `blacklisted_names` is a list of regexes that are blacklisted. When a prefix, suffix or nickname matches one of these regexes, they won't be able to be used.
