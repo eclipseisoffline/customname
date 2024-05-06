@@ -11,9 +11,9 @@ import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.component.DataComponentTypes;
-import net.minecraft.component.type.LoreComponent;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NbtList;
+import net.minecraft.nbt.NbtString;
 import net.minecraft.network.packet.s2c.play.PlayerListS2CPacket;
 import net.minecraft.network.packet.s2c.play.PlayerListS2CPacket.Action;
 import net.minecraft.server.command.CommandManager;
@@ -109,7 +109,7 @@ public class CustomName implements ModInitializer {
                                                             Text.of("Invalid item name")).create();
                                                 }
 
-                                                holding.set(DataComponentTypes.CUSTOM_NAME, argument);
+                                                holding.setCustomName(argument);
                                                 context.getSource().sendFeedback(
                                                         () -> Text.literal("Set item name to ")
                                                                 .append(argument), true);
@@ -151,7 +151,9 @@ public class CustomName implements ModInitializer {
                                                             Text.of("Invalid item lore")).create();
                                                 }
 
-                                                holding.set(DataComponentTypes.LORE, new LoreComponent(List.of(argument)));
+                                                NbtList loreList = new NbtList();
+                                                loreList.add(NbtString.of(Text.Serializer.toJson(argument)));
+                                                holding.getOrCreateSubNbt("display").put("Lore", loreList);
                                                 context.getSource().sendFeedback(
                                                         () -> Text.literal("Set item lore to ")
                                                                 .append(argument), true);
