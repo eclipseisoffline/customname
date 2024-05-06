@@ -5,7 +5,6 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import java.io.IOException;
 import java.io.StringReader;
-import java.util.List;
 import java.util.function.Predicate;
 import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.fabricmc.api.ModInitializer;
@@ -155,7 +154,7 @@ public class CustomName implements ModInitializer {
                                                 loreList.add(NbtString.of(Text.Serializer.toJson(argument)));
                                                 holding.getOrCreateSubNbt("display").put("Lore", loreList);
                                                 context.getSource().sendFeedback(
-                                                        () -> Text.literal("Set item lore to ")
+                                                        Text.literal("Set item lore to ")
                                                                 .append(argument), true);
 
                                                 return 0;
