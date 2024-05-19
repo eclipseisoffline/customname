@@ -66,10 +66,6 @@ public class PlayerNameManager extends PersistentState {
         return fullPlayerNames.get(player.getUuid());
     }
 
-    public boolean calculatedFullPlayerName(ServerPlayerEntity player) {
-        return fullPlayerNames.containsKey(player.getUuid());
-    }
-
     private void markDirty(ServerPlayerEntity player) {
         updateFullPlayerName(player);
         markDirty();
