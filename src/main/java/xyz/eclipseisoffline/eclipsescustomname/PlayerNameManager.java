@@ -169,8 +169,8 @@ public class PlayerNameManager extends PersistentState {
             if (old) {
                 CustomName.LOGGER.info("Converting old name of " + key + " to new format");
                 name = CustomName.argumentToText(raw.replaceAll("\"", "").replaceAll(
-                                String.valueOf(Formatting.FORMATTING_CODE_PREFIX), "&"), true, false,
-                        false);
+                                String.valueOf(Formatting.FORMATTING_CODE_PREFIX), "&"),
+                        true, false, false);
             } else {
                 name = Text.Serialization.fromJson(compound.getString(key), registries);
             }
