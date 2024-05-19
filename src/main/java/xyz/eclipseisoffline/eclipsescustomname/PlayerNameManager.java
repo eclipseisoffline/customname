@@ -68,10 +68,6 @@ public class PlayerNameManager extends PersistentState {
         return fullPlayerNames.get(player.getUuid());
     }
 
-    public boolean calculatedFullPlayerName(ServerPlayerEntity player) {
-        return fullPlayerNames.containsKey(player.getUuid());
-    }
-
     private void markDirty(ServerPlayerEntity player) {
         updateFullPlayerName(player);
         markDirty();
@@ -169,8 +165,8 @@ public class PlayerNameManager extends PersistentState {
             if (old) {
                 CustomName.LOGGER.info("Converting old name of " + key + " to new format");
                 name = CustomName.argumentToText(raw.replaceAll("\"", "").replaceAll(
-                                String.valueOf(Formatting.FORMATTING_CODE_PREFIX), "&"), true, false,
-                        false);
+                                String.valueOf(Formatting.FORMATTING_CODE_PREFIX), "&"),
+                        true, false, false);
             } else {
                 name = Text.Serializer.fromJson(compound.getString(key));
             }

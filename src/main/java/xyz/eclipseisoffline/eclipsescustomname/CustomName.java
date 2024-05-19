@@ -97,9 +97,8 @@ public class CustomName implements ModInitializer {
 
                                                 Text argument;
                                                 try {
-                                                    argument = argumentToText(
-                                                            StringArgumentType.getString(context,
-                                                                    "name"), true, true, true);
+                                                    argument = argumentToText(StringArgumentType.getString(context, "name"),
+                                                            true, true, true);
                                                 } catch (IllegalArgumentException exception) {
                                                     throw new SimpleCommandExceptionType(Text.of(exception.getMessage())).create();
                                                 }
@@ -139,12 +138,12 @@ public class CustomName implements ModInitializer {
 
                                                 Text argument;
                                                 try {
-                                                    argument = argumentToText(
-                                                            StringArgumentType.getString(context,
-                                                                    "lore"), true, true, true);
+                                                    argument = argumentToText(StringArgumentType.getString(context,"lore"),
+                                                            true, true, true);
                                                 } catch (IllegalArgumentException exception) {
                                                     throw new SimpleCommandExceptionType(Text.of(exception.getMessage())).create();
                                                 }
+
                                                 if (Formatting.strip(argument.getString()).isEmpty()) {
                                                     throw new SimpleCommandExceptionType(
                                                             Text.of("Invalid item lore")).create();
@@ -170,7 +169,7 @@ public class CustomName implements ModInitializer {
                     .getPlayerOrThrow();
             Text name;
             try {
-                name = argumentToText(
+                name = playerNameArgumentToText(
                         StringArgumentType.getString(context, "name"));
             } catch (IllegalArgumentException exception) {
                 throw new SimpleCommandExceptionType(Text.of(exception.getMessage())).create();
@@ -220,7 +219,7 @@ public class CustomName implements ModInitializer {
         return (source) -> true;
     }
 
-    private Text argumentToText(String argument) {
+    private Text playerNameArgumentToText(String argument) {
         return argumentToText(argument, config.formattingEnabled(), false, false);
     }
 
@@ -248,9 +247,12 @@ public class CustomName implements ModInitializer {
 
                     if (current == FORMATTING_CODE) {
                         if (formatting) {
-                            throw new IllegalArgumentException("Invalid formatting code");
+                            formatting = false;
+                            wasFormatting = false;
+                            currentText.append(current);
+                        } else {
+                            formatting = true;
                         }
-                        formatting = true;
                     } else if (current == HEX_CODE && formatting) {
                         formatting = false;
                         if (!currentText.isEmpty()) {
