@@ -21,13 +21,16 @@ import net.minecraft.world.PersistentStateManager;
 import net.minecraft.world.World;
 
 public class PlayerNameManager extends PersistentState {
+    private final CustomNameConfig config;
     private final Map<UUID, Text> playerPrefixes = new HashMap<>();
     private final Map<UUID, Text> playerSuffixes = new HashMap<>();
     private final Map<UUID, Text> playerNicknames = new HashMap<>();
     private final Map<UUID, Text> fullPlayerNames = new HashMap<>();
     private final LuckPerms luckPerms;
 
-    private PlayerNameManager(MinecraftServer server) {
+    private PlayerNameManager(MinecraftServer server, CustomNameConfig config) {
+        this.config = config;
+
         LuckPerms luckPerms;
         String luckPermsState = "found";
         try {
@@ -90,9 +93,7 @@ public class PlayerNameManager extends PersistentState {
         MutableText name = Text.literal("");
         if (permissionsPrefix != null) {
             name.append(CustomName
-                    .argumentToText(permissionsPrefix,
-                            CustomNameConfig.getInstance().formattingEnabled(),
-                            true, false));
+                    .argumentToText(permissionsPrefix, config.formattingEnabled(), true, false));
             name.append(" ");
         }
         if (prefix != null) {
@@ -111,9 +112,7 @@ public class PlayerNameManager extends PersistentState {
         if (permissionsSuffix != null) {
             name.append(" ");
             name.append(CustomName
-                    .argumentToText(permissionsSuffix,
-                            CustomNameConfig.getInstance().formattingEnabled(),
-                            true, false));
+                    .argumentToText(permissionsSuffix, config.formattingEnabled(), true, false));
         }
 
         fullPlayerNames.put(player.getUuid(), name);
@@ -138,8 +137,8 @@ public class PlayerNameManager extends PersistentState {
     }
 
     public static PlayerNameManager loadFromNbt(NbtCompound nbtCompound,
-            RegistryWrapper.WrapperLookup registries, MinecraftServer server) {
-        PlayerNameManager playerNameManager = new PlayerNameManager(server);
+            RegistryWrapper.WrapperLookup registries, MinecraftServer server, CustomNameConfig config) {
+        PlayerNameManager playerNameManager = new PlayerNameManager(server, config);
 
         NbtCompound prefixes = nbtCompound.getCompound("prefixes");
         readNames(prefixes, playerNameManager.playerPrefixes, registries);
@@ -174,12 +173,12 @@ public class PlayerNameManager extends PersistentState {
         });
     }
 
-    public static PlayerNameManager getPlayerNameManager(MinecraftServer server) {
+    public static PlayerNameManager getPlayerNameManager(MinecraftServer server, CustomNameConfig config) {
         PersistentStateManager persistentStateManager = server.getWorld(World.OVERWORLD)
                 .getPersistentStateManager();
         return persistentStateManager.getOrCreate(new Type<>(
-                () -> new PlayerNameManager(server),
-                        (nbt, registries) -> loadFromNbt(nbt, registries, server), null),
+                () -> new PlayerNameManager(server, config),
+                        (nbt, registries) -> loadFromNbt(nbt, registries, server, config), null),
                 CustomName.MOD_ID);
     }
 

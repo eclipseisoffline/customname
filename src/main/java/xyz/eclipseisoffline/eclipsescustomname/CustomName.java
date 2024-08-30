@@ -34,8 +34,7 @@ public class CustomName implements ModInitializer {
     public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
     private static final char FORMATTING_CODE = '&';
     private static final char HEX_CODE = '#';
-    private static final int MAX_LENGTH = 20;
-    private CustomNameConfig config;
+    private static CustomNameConfig config;
 
     @Override
     public void onInitialize() {
@@ -44,7 +43,7 @@ public class CustomName implements ModInitializer {
                         .getVersion());
         LOGGER.info("Custom Names " + modVersion + " initialising");
         LOGGER.info("Reading config");
-        config = CustomNameConfig.getInstance();
+        config = CustomNameConfig.readOrCreate();
 
         CommandRegistrationCallback.EVENT.register(
                 ((dispatcher, registryAccess, environment) -> {
@@ -164,8 +163,7 @@ public class CustomName implements ModInitializer {
 
     private Command<ServerCommandSource> updatePlayerName(PlayerNameManager.NameType nameType) {
         return context -> {
-            ServerPlayerEntity player = context.getSource()
-                    .getPlayerOrThrow();
+            ServerPlayerEntity player = context.getSource().getPlayerOrThrow();
             Text name;
             try {
                 name = playerNameArgumentToText(
@@ -178,7 +176,7 @@ public class CustomName implements ModInitializer {
                 throw new SimpleCommandExceptionType(Text.of("That name is invalid")).create();
             }
 
-            PlayerNameManager.getPlayerNameManager(context.getSource().getServer())
+            PlayerNameManager.getPlayerNameManager(context.getSource().getServer(), config)
                     .updatePlayerName(player, name, nameType);
 
             context.getSource().sendFeedback(
@@ -194,7 +192,7 @@ public class CustomName implements ModInitializer {
         return context -> {
             ServerPlayerEntity player = context.getSource().getPlayerOrThrow();
 
-            PlayerNameManager.getPlayerNameManager(context.getSource().getServer())
+            PlayerNameManager.getPlayerNameManager(context.getSource().getServer(), config)
                     .updatePlayerName(player, null, nameType);
 
             context.getSource().sendFeedback(
@@ -208,7 +206,7 @@ public class CustomName implements ModInitializer {
     private boolean invalidNameArgument(Text argument) {
         String name = Formatting.strip(argument.getString());
         assert name != null;
-        return name.isEmpty() || config.nameBlacklisted(name) || name.length() > MAX_LENGTH;
+        return name.isEmpty() || config.nameBlacklisted(name) || name.length() > config.maxNameLength();
     }
 
     private Predicate<ServerCommandSource> permissionCheck(String permission) {
@@ -323,5 +321,9 @@ public class CustomName implements ModInitializer {
         assert player.getServer() != null;
         player.getServer().getPlayerManager()
                 .sendToAll(new PlayerListS2CPacket(Action.UPDATE_DISPLAY_NAME, player));
+    }
+
+    public static CustomNameConfig getConfig() {
+        return config;
     }
 }
