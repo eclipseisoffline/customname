@@ -17,7 +17,7 @@ This mod is licensed under GNU LGPLv3.
 
 ## Donating
 
-If you like this mod, consider [donating](https://ko-fi.com/eclipseisoffline)!
+If you like this mod, consider [donating](https://buymeacoffee.com/eclipseisoffline)!
 It really helps me a ton!
 
 ## Usage

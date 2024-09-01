@@ -40,8 +40,8 @@
   "custom": {
     "modmenu": {
       "links": {
-        "modmenu.donate": "https://buymeacoffee.com/",
-        "modmenu.buymeacoffee": "https://buymeacoffee.com/",
+        "modmenu.donate": "https://buymeacoffee.com/eclipseisoffline",
+        "modmenu.buymeacoffee": "https://buymeacoffee.com/eclipseisoffline",
         "modmenu.modrinth": "https://modrinth.com/mod/fabric-custom-names"
       }
     }
