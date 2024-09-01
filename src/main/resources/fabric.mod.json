@@ -17,7 +17,7 @@
     "issues": "https://github.com/eclipseisoffline/customname/issues",
     "sources": "https://github.com/eclipseisoffline/customname"
   },
-  "license": "GPLv3",
+  "license": "LGPL-3.0-only",
   "icon": "assets/eclipsescustomname/icon.png",
   "environment": "*",
   "entrypoints": {
@@ -40,8 +40,8 @@
   "custom": {
     "modmenu": {
       "links": {
-        "modmenu.donate": "https://ko-fi.com/eclipseisoffline",
-        "modmenu.kofi": "https://ko-fi.com/eclipseisoffline",
+        "modmenu.donate": "https://buymeacoffee.com/",
+        "modmenu.buymeacoffee": "https://buymeacoffee.com/",
         "modmenu.modrinth": "https://modrinth.com/mod/fabric-custom-names"
       }
     }

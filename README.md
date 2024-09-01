@@ -13,7 +13,7 @@ Feel free to report any bugs, or suggest new features, at the issue tracker.
 
 ## License
 
-This mod is licensed under GNU GPLv3.
+This mod is licensed under GNU LGPLv3.
 
 ## Donating
 
@@ -25,7 +25,7 @@ It really helps me a ton!
 Mod builds can be found [here](https://github.com/eclipseisoffline/customname/packages/2065010) and on [Modrinth](https://modrinth.com/mod/fabric-custom-names).
 
 This mod is oriented at Fabric Minecraft servers, but works on the client as well.
-This mod requires the Fabric API, and is currently available for Minecraft 1.21 and 1.20.1 (1.20.5+6, 1.20.4, 1.19.4 and 1.19.2 ports exist, but are no longer updated).
+This mod requires the Fabric API, and is currently available for Minecraft 1.21+1 (1.20.5+6, 1.20.4, 1.20.1, 1.19.4 and 1.19.2 ports exist, but are no longer updated).
 You can make a version port request at the issue tracker.
 
 The `/name` command can be used as follows:
@@ -58,10 +58,12 @@ By default, the configuration file looks like this:
 {
   "enable_formatting": true,
   "require_permissions": true,
-  "blacklisted_names": []
+  "blacklisted_names": [],
+  "max_name_length": 16
 }
 ```
 
 - `enable_formatting` can be used to disable the use of Minecraft formatting codes in names.
 - `require_permissions` can be used to disable the permission requirement. When set to `false`, the `/name`, `/itemname` and `/itemlore` commands are available to everyone.
 - `blacklisted_names` is a list of regexes that are blacklisted. When a prefix, suffix or nickname matches one of these regexes, they won't be able to be used.
+- `max_name_length` controls how long a player prefix/nickname/suffix can be, which can be 32 at most.
