@@ -22,7 +22,7 @@ import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.util.dynamic.Codecs;
 
 public record CustomNameConfig(boolean formattingEnabled, boolean requirePermissions, List<Pattern> blacklistedNames,
-                               int maxNameLength) {
+                               int maxNameLength, boolean operatorsBypassRestrictions) {
     private static final int MAX_MAX_LENGTH = 32;
     private static final Path CONFIG_FILE = Path.of(CustomName.MOD_ID + ".json");
 
@@ -32,7 +32,8 @@ public record CustomNameConfig(boolean formattingEnabled, boolean requirePermiss
                     Codec.BOOL.fieldOf("enable_formatting").orElse(true).forGetter(CustomNameConfig::formattingEnabled),
                     Codec.BOOL.fieldOf("require_permissions").orElse(true).forGetter(CustomNameConfig::requirePermissions),
                     PATTERN_CODEC.listOf().fieldOf("blacklisted_names").orElse(List.of()).forGetter(CustomNameConfig::blacklistedNames),
-                    Codecs.rangedInt(1, MAX_MAX_LENGTH).fieldOf("max_name_length").orElse(16).forGetter(CustomNameConfig::maxNameLength)
+                    Codecs.rangedInt(1, MAX_MAX_LENGTH).fieldOf("max_name_length").orElse(16).forGetter(CustomNameConfig::maxNameLength),
+                    Codec.BOOL.fieldOf("operators_bypass_restrictions").orElse(false).forGetter(CustomNameConfig::operatorsBypassRestrictions)
             ).apply(instance, CustomNameConfig::new)
     );
 
@@ -84,6 +85,6 @@ public record CustomNameConfig(boolean formattingEnabled, boolean requirePermiss
     }
 
     private static CustomNameConfig createDefault() {
-        return new CustomNameConfig(true, true, List.of(), 16);
+        return new CustomNameConfig(true, true, List.of(), 16, false);
     }
 }
