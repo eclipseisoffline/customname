@@ -2,6 +2,7 @@ package xyz.eclipseisoffline.eclipsescustomname;
 
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.arguments.StringArgumentType;
+import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import java.io.IOException;
 import java.io.StringReader;
@@ -11,6 +12,7 @@ import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.loader.api.FabricLoader;
+import net.minecraft.command.argument.EntityArgumentType;
 import net.minecraft.component.DataComponentTypes;
 import net.minecraft.component.type.LoreComponent;
 import net.minecraft.item.ItemStack;
@@ -41,7 +43,7 @@ public class CustomName implements ModInitializer {
         String modVersion = String.valueOf(
                 FabricLoader.getInstance().getModContainer(MOD_ID).orElseThrow().getMetadata()
                         .getVersion());
-        LOGGER.info("Custom Names " + modVersion + " initialising");
+        LOGGER.info("Custom Names {} initialising", modVersion);
         LOGGER.info("Reading config");
         config = CustomNameConfig.readOrCreate();
 
@@ -49,31 +51,15 @@ public class CustomName implements ModInitializer {
                 ((dispatcher, registryAccess, environment) -> {
                     dispatcher.register(
                             CommandManager.literal("name")
+                                    .then(CommandManager.literal("other")
+                                            .then(otherPlayerNameCommand(NameType.PREFIX))
+                                            .then(otherPlayerNameCommand(NameType.SUFFIX))
+                                            .then(otherPlayerNameCommand(NameType.NICKNAME))
+                                    )
                                     .requires(ServerCommandSource::isExecutedByPlayer)
-                                    .then(CommandManager.literal("prefix")
-                                            .requires(permissionCheck("customname.prefix"))
-                                            .then(CommandManager.argument("name",
-                                                            StringArgumentType.greedyString())
-                                                    .executes(updatePlayerName(NameType.PREFIX))
-                                            )
-                                            .executes(clearPlayerName(NameType.PREFIX))
-                                    )
-                                    .then(CommandManager.literal("suffix")
-                                            .requires(permissionCheck("customname.suffix"))
-                                            .then(CommandManager.argument("name",
-                                                            StringArgumentType.greedyString())
-                                                    .executes(updatePlayerName(NameType.SUFFIX))
-                                            )
-                                            .executes(clearPlayerName(NameType.SUFFIX))
-                                    )
-                                    .then(CommandManager.literal("nickname")
-                                            .requires(permissionCheck("customname.nick"))
-                                            .then(CommandManager.argument("name",
-                                                            StringArgumentType.greedyString())
-                                                    .executes(updatePlayerName(NameType.NICKNAME))
-                                            )
-                                            .executes(clearPlayerName(NameType.NICKNAME))
-                                    )
+                                    .then(playerNameCommand(NameType.PREFIX))
+                                    .then(playerNameCommand(NameType.SUFFIX))
+                                    .then(playerNameCommand(NameType.NICKNAME))
                     );
 
                     dispatcher.register(
@@ -161,18 +147,39 @@ public class CustomName implements ModInitializer {
                 }));
     }
 
-    private Command<ServerCommandSource> updatePlayerName(PlayerNameManager.NameType nameType) {
+    private LiteralArgumentBuilder<ServerCommandSource> playerNameCommand(PlayerNameManager.NameType nameType) {
+        return CommandManager.literal(nameType.getName())
+                .requires(permissionCheck(nameType.getPermission()))
+                .then(CommandManager.argument("name", StringArgumentType.greedyString())
+                        .executes(updatePlayerName(nameType, false))
+                )
+                .executes(clearPlayerName(nameType, false));
+    }
+
+    private LiteralArgumentBuilder<ServerCommandSource> otherPlayerNameCommand(PlayerNameManager.NameType nameType) {
+        return CommandManager.literal(nameType.getName())
+                .requires(permissionCheck(nameType.getPermission()).and(permissionCheck("customname.other")))
+                .then(CommandManager.argument("player", EntityArgumentType.player())
+                        .then(CommandManager.argument("name", StringArgumentType.greedyString())
+                                .executes(updatePlayerName(nameType, true))
+                        )
+                        .executes(clearPlayerName(nameType, true))
+                );
+    }
+
+    private Command<ServerCommandSource> updatePlayerName(PlayerNameManager.NameType nameType, boolean other) {
         return context -> {
-            ServerPlayerEntity player = context.getSource().getPlayerOrThrow();
+            ServerPlayerEntity player = other ? EntityArgumentType.getPlayer(context, "player") : context.getSource().getPlayerOrThrow();
             Text name;
+
+            boolean bypassRestrictions = config.operatorsBypassRestrictions() && Permissions.check(context.getSource(), "customname.bypass_restrictions", 2);
             try {
-                name = playerNameArgumentToText(
-                        StringArgumentType.getString(context, "name"));
+                name = playerNameArgumentToText(StringArgumentType.getString(context, "name"), bypassRestrictions);
             } catch (IllegalArgumentException exception) {
                 throw new SimpleCommandExceptionType(Text.of(exception.getMessage())).create();
             }
 
-            if (invalidNameArgument(name)) {
+            if (invalidNameArgument(name, bypassRestrictions)) {
                 throw new SimpleCommandExceptionType(Text.of("That name is invalid")).create();
             }
 
@@ -188,9 +195,9 @@ public class CustomName implements ModInitializer {
         };
     }
 
-    private Command<ServerCommandSource> clearPlayerName(PlayerNameManager.NameType nameType) {
+    private Command<ServerCommandSource> clearPlayerName(PlayerNameManager.NameType nameType, boolean other) {
         return context -> {
-            ServerPlayerEntity player = context.getSource().getPlayerOrThrow();
+            ServerPlayerEntity player = other ? EntityArgumentType.getPlayer(context, "player") : context.getSource().getPlayerOrThrow();
 
             PlayerNameManager.getPlayerNameManager(context.getSource().getServer(), config)
                     .updatePlayerName(player, null, nameType);
@@ -203,10 +210,10 @@ public class CustomName implements ModInitializer {
         };
     }
 
-    private boolean invalidNameArgument(Text argument) {
+    private boolean invalidNameArgument(Text argument, boolean bypassRestrictions) {
         String name = Formatting.strip(argument.getString());
         assert name != null;
-        return name.isEmpty() || config.nameBlacklisted(name) || name.length() > config.maxNameLength();
+        return name.isEmpty() || (!bypassRestrictions && (config.nameBlacklisted(name) || name.length() > config.maxNameLength()));
     }
 
     private Predicate<ServerCommandSource> permissionCheck(String permission) {
@@ -216,8 +223,8 @@ public class CustomName implements ModInitializer {
         return (source) -> true;
     }
 
-    private Text playerNameArgumentToText(String argument) {
-        return argumentToText(argument, config.formattingEnabled(), false, false);
+    private Text playerNameArgumentToText(String argument, boolean spaceAllowed) {
+        return argumentToText(argument, config.formattingEnabled(), spaceAllowed, false);
     }
 
     public static Text argumentToText(String argument, boolean formattingEnabled,
