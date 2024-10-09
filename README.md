@@ -25,7 +25,7 @@ It really helps me a ton!
 Mod builds can be found [here](https://github.com/eclipseisoffline/customname/packages/2065010) and on [Modrinth](https://modrinth.com/mod/fabric-custom-names).
 
 This mod is oriented at Fabric Minecraft servers, but works on the client as well.
-This mod requires the Fabric API, and is currently available for Minecraft 1.21+1 (1.20.5+6, 1.20.4, 1.20.1, 1.19.4 and 1.19.2 ports exist, but are no longer updated).
+This mod requires the Fabric API, and is currently available for Minecraft 1.21.2 and 1.21+1 (1.20.5+6, 1.20.4, 1.20.1, 1.19.4 and 1.19.2 ports exist, but are no longer updated).
 You can make a version port request at the issue tracker.
 
 The `/name` command can be used as follows:
@@ -34,8 +34,12 @@ The `/name` command can be used as follows:
   - Requires operator or the `customname.prefix` permission.
 - `/name suffix` - sets a suffix for your name, or when no suffix is given, clears your suffix.
   - Requires operator or the `customname.suffix` permission.
-- `/name nickname` - sets a nickname that will appear instead of your IGN. When hovered above this nickname, your IGN will show. When no nickname is given, clears your nickname.
+- `/name nickname` - sets a nickname that will appear instead of your IGN, or when no nickname is given, clears your nickname.
   - Requires operator or the `customname.nick` permission.
+- `/name other <prefix|suffix|nickname> <player>`
+  - Same syntax as their respective `/name <prefix|suffix|nickname>` commands, but to set another player's prefix/suffix/nickname. Requires operator or the `customname.other` permission on top of the respective `customname.<nametype>` permission.
+
+When hovering over a player's name with advanced tooltips enabled, their real name will show up.
 
 The `/itemname` command can be used to rename the item you're currently holding. Requires operator or the `customname.itemname` permission.
 Similarly, the `/itemlore` can be used to set the lore of an item you're holding. Requires operator or the `customname.itemlore` permission.
@@ -59,7 +63,8 @@ By default, the configuration file looks like this:
   "enable_formatting": true,
   "require_permissions": true,
   "blacklisted_names": [],
-  "max_name_length": 16
+  "max_name_length": 16,
+  "operators_bypass_restrictions": false
 }
 ```
 
@@ -67,3 +72,4 @@ By default, the configuration file looks like this:
 - `require_permissions` can be used to disable the permission requirement. When set to `false`, the `/name`, `/itemname` and `/itemlore` commands are available to everyone.
 - `blacklisted_names` is a list of regexes that are blacklisted. When a prefix, suffix or nickname matches one of these regexes, they won't be able to be used.
 - `max_name_length` controls how long a player prefix/nickname/suffix can be, which can be 32 at most.
+- `operators_bypass_restrictions` can be used to disable name restrictions for operators. When this is enabled, operators and people with the permission `customname.bypass_restrictions` can use spaces in nicknames, bypass the max length restriction, and more.
