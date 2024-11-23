@@ -42,7 +42,11 @@ The `/name` command can be used as follows:
 When hovering over a player's name with advanced tooltips enabled, their real name will show up.
 
 The `/itemname` command can be used to rename the item you're currently holding. Requires operator or the `customname.itemname` permission.
+
 Similarly, the `/itemlore` can be used to set the lore of an item you're holding. Requires operator or the `customname.itemlore` permission.
+`\n` can be used to create new lines, `\\` can be used to escape a backslash.
+
+Similar to the `/name` commands, running these commands without arguments resets the item name/lore of the item you're holding.
 
 Minecraft's [formatting codes](https://minecraft.wiki/w/Formatting_codes) can be used to format your prefix, suffix, nickname, or your item names/lores.
 Instead of the `§` character, use `&` (to use `&` in an (item)name, type `&&`).
