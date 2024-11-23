@@ -6,6 +6,7 @@ import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import java.io.IOException;
 import java.io.StringReader;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Predicate;
 import me.lucko.fabric.api.permissions.v0.Permissions;
@@ -13,6 +14,8 @@ import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.command.argument.EntityArgumentType;
+import net.minecraft.component.Component;
+import net.minecraft.component.ComponentType;
 import net.minecraft.component.DataComponentTypes;
 import net.minecraft.component.type.LoreComponent;
 import net.minecraft.item.ItemStack;
@@ -94,6 +97,7 @@ public class CustomName implements ModInitializer {
                                                 }
 
                                                 holding.set(DataComponentTypes.CUSTOM_NAME, argument);
+                                                player.setStackInHand(Hand.MAIN_HAND, holding);
                                                 context.getSource().sendFeedback(
                                                         () -> Text.literal("Set item name to ")
                                                                 .append(argument), true);
@@ -101,6 +105,7 @@ public class CustomName implements ModInitializer {
                                                 return 0;
                                             })
                                     )
+                                    .executes(resetItemComponent(DataComponentTypes.CUSTOM_NAME, "item name"))
                     );
 
                     dispatcher.register(
@@ -122,27 +127,37 @@ public class CustomName implements ModInitializer {
                                                             Text.of("Must hold an item to set lore of")).create();
                                                 }
 
-                                                Text argument;
+                                                List<Text> arguments = new ArrayList<>();
                                                 try {
-                                                    argument = argumentToText(StringArgumentType.getString(context,"lore"),
-                                                            true, true, true);
+                                                    List<String> lines = splitArgument(StringArgumentType.getString(context, "lore"));
+                                                    for (String line : lines) {
+                                                        Text argument = argumentToText(line, true, true, true);
+
+                                                        if (Formatting.strip(argument.getString()).isEmpty()) {
+                                                            throw new SimpleCommandExceptionType(
+                                                                    Text.of("Invalid item lore")).create();
+                                                        }
+                                                        arguments.add(argument);
+                                                    }
                                                 } catch (IllegalArgumentException exception) {
                                                     throw new SimpleCommandExceptionType(Text.of(exception.getMessage())).create();
                                                 }
 
-                                                if (Formatting.strip(argument.getString()).isEmpty()) {
-                                                    throw new SimpleCommandExceptionType(
-                                                            Text.of("Invalid item lore")).create();
-                                                }
-
-                                                holding.set(DataComponentTypes.LORE, new LoreComponent(List.of(argument)));
+                                                holding.set(DataComponentTypes.LORE, new LoreComponent(arguments));
+                                                player.setStackInHand(Hand.MAIN_HAND, holding);
                                                 context.getSource().sendFeedback(
-                                                        () -> Text.literal("Set item lore to ")
-                                                                .append(argument), true);
+                                                        () -> {
+                                                            if (arguments.size() == 1) {
+                                                                return Text.literal("Set item lore to ").append(arguments.get(0));
+                                                            } else {
+                                                                return Text.literal("Updated item lore");
+                                                            }
+                                                        }, true);
 
                                                 return 0;
                                             })
                                     )
+                                    .executes(resetItemComponent(DataComponentTypes.LORE, "item lore"))
                     );
                 }));
     }
@@ -210,6 +225,23 @@ public class CustomName implements ModInitializer {
         };
     }
 
+    private Command<ServerCommandSource> resetItemComponent(ComponentType<?> component, String name) {
+        return context -> {
+            ServerPlayerEntity player = context.getSource().getPlayerOrThrow();
+            ItemStack holding = player.getStackInHand(Hand.MAIN_HAND);
+
+            if (holding.isEmpty()) {
+                throw new SimpleCommandExceptionType(
+                        Text.of("Must hold an item to reset " + name + " of")).create();
+            }
+
+            holding.remove(component);
+            player.setStackInHand(Hand.MAIN_HAND, holding);
+            context.getSource().sendFeedback(() -> Text.literal("Reset " + name + " of item"), true);
+            return 0;
+        };
+    }
+
     private boolean invalidNameArgument(Text argument, boolean bypassRestrictions) {
         String name = Formatting.strip(argument.getString());
         assert name != null;
@@ -225,6 +257,44 @@ public class CustomName implements ModInitializer {
 
     private Text playerNameArgumentToText(String argument, boolean spaceAllowed) {
         return argumentToText(argument, config.formattingEnabled(), spaceAllowed, false);
+    }
+
+    private static List<String> splitArgument(String argument) {
+        boolean inBackslash = false;
+        StringReader reader = new StringReader(argument);
+        StringBuilder currentString = new StringBuilder();
+        List<String> strings = new ArrayList<>();
+
+        try {
+            int c = reader.read();
+            while (c != -1) {
+                char current = (char) c;
+                if (current == '\\') {
+                    if (inBackslash) {
+                        currentString.append('\\');
+                        inBackslash = false;
+                    } else {
+                        inBackslash = true;
+                    }
+                } else if (inBackslash) {
+                    if ((char) c == 'n') {
+                        strings.add(currentString.toString());
+                        currentString = new StringBuilder();
+                    }
+                    inBackslash = false;
+                } else {
+                    currentString.append(current);
+                }
+                c = reader.read();
+            }
+        } catch (IOException exception) {
+            throw new AssertionError(exception);
+        }
+
+        if (!currentString.isEmpty()) {
+            strings.add(currentString.toString());
+        }
+        return strings;
     }
 
     public static Text argumentToText(String argument, boolean formattingEnabled,
