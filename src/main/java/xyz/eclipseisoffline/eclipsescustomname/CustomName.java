@@ -67,9 +67,7 @@ public class CustomName implements ModInitializer {
 
                     dispatcher.register(
                             CommandManager.literal("itemname")
-                                    .requires(ServerCommandSource::isExecutedByPlayer)
-                                    .requires(permissionCheck("customname.itemname"))
-                                    .requires(source -> config.formattingEnabled())
+                                    .requires(permissionCheck("customname.itemname").and(ServerCommandSource::isExecutedByPlayer).and(source -> config.formattingEnabled()))
                                     .then(CommandManager.argument("name",
                                                     StringArgumentType.greedyString())
                                             .executes(context -> {
@@ -110,9 +108,7 @@ public class CustomName implements ModInitializer {
 
                     dispatcher.register(
                             CommandManager.literal("itemlore")
-                                    .requires(ServerCommandSource::isExecutedByPlayer)
-                                    .requires(permissionCheck("customname.itemlore"))
-                                    .requires(source -> config.formattingEnabled())
+                                    .requires(permissionCheck("customname.itemlore").and(ServerCommandSource::isExecutedByPlayer).and(source -> config.formattingEnabled()))
                                     .then(CommandManager.argument("lore",
                                                     StringArgumentType.greedyString())
                                             .executes(context -> {
