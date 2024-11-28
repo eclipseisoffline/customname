@@ -58,7 +58,6 @@ public class CustomName implements ModInitializer {
                                             .then(otherPlayerNameCommand(NameType.SUFFIX))
                                             .then(otherPlayerNameCommand(NameType.NICKNAME))
                                     )
-                                    .requires(ServerCommandSource::isExecutedByPlayer)
                                     .then(playerNameCommand(NameType.PREFIX))
                                     .then(playerNameCommand(NameType.SUFFIX))
                                     .then(playerNameCommand(NameType.NICKNAME))
@@ -159,7 +158,7 @@ public class CustomName implements ModInitializer {
 
     private LiteralArgumentBuilder<ServerCommandSource> playerNameCommand(PlayerNameManager.NameType nameType) {
         return CommandManager.literal(nameType.getName())
-                .requires(permissionCheck(nameType.getPermission()))
+                .requires(permissionCheck(nameType.getPermission()).and(ServerCommandSource::isExecutedByPlayer))
                 .then(CommandManager.argument("name", StringArgumentType.greedyString())
                         .executes(updatePlayerName(nameType, false))
                 )
