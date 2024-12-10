@@ -28,16 +28,16 @@ For support and/or any questions you may have, feel free to join [my discord](ht
 
 ## Version support
 
-| Minecraft Version | Status                   |
-|-------------------|--------------------------|
-| 1.21.4            | ✅ Current                |
-| 1.21.2+3          | ❌ Available, unsupported |
-| 1.21+1            | ✅ Current                |
-| 1.20.5+6          | ❌ Available, unsupported |
-| 1.20.4            | ❌ Available, unsupported |
-| 1.20.1            | ❌ Available, unsupported |
-| 1.19.4            | ❌ Available, unsupported |
-| 1.19.2            | ❌ Available, unsupported |
+| Minecraft Version | Status                    |
+|-------------------|---------------------------|
+| 1.21.4            | ✅ Current                 |
+| 1.21.2+3          | ✔️ Available, unsupported |
+| 1.21+1            | ✅ Current                 |
+| 1.20.5+6          | ✔️ Available, unsupported |
+| 1.20.4            | ✔️ Available, unsupported |
+| 1.20.1            | ✔️ Available, unsupported |
+| 1.19.4            | ✔️ Available, unsupported |
+| 1.19.2            | ✔️ Available, unsupported |
 
 I try to keep support up for the latest major and latest minor release of Minecraft. Updates to newer Minecraft
 versions may be delayed from time to time, as I do not always have the time to immediately update my mods.
