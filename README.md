@@ -4,6 +4,8 @@
 ![Modrinth Game Versions](https://img.shields.io/modrinth/game-versions/saIlazMs?logo=modrinth&color=008800)
 ![Modrinth Downloads](https://img.shields.io/modrinth/dt/saIlazMs?logo=modrinth&color=008800)](https://modrinth.com/mod/fabric-custom-names)
 [![Discord Badge](https://img.shields.io/badge/chat-discord-%235865f2)](https://discord.gg/CNNkyWRkqm)
+[![Github Badge](https://img.shields.io/badge/github-customname-white?logo=github)
+![GitHub License](https://img.shields.io/github/license/eclipseisoffline/customname)](https://github.com/eclipseisoffline/customname)
 
 This mod adds a `/name`, a `/itemname` and a `/itemlore` command to Minecraft, which players can use to set a prefix, suffix, or nickname,
 or give their items colourful names and lore. Mostly designed to be used in small, private servers.
