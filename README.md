@@ -1,8 +1,9 @@
 # Custom Names
 
-![Modrinth Version](https://img.shields.io/modrinth/v/saIlazMs?logo=modrinth&color=008800)
+[![Modrinth Version](https://img.shields.io/modrinth/v/saIlazMs?logo=modrinth&color=008800)
 ![Modrinth Game Versions](https://img.shields.io/modrinth/game-versions/saIlazMs?logo=modrinth&color=008800)
-![Modrinth Downloads](https://img.shields.io/modrinth/dt/saIlazMs?logo=modrinth&color=008800)
+![Modrinth Downloads](https://img.shields.io/modrinth/dt/saIlazMs?logo=modrinth&color=008800)](https://modrinth.com/mod/fabric-custom-names)
+[![Discord Badge](https://img.shields.io/badge/chat-discord-%235865f2)](https://discord.gg/CNNkyWRkqm)
 
 This mod adds a `/name`, a `/itemname` and a `/itemlore` command to Minecraft, which players can use to set a prefix, suffix, or nickname,
 or give their items colourful names and lore. Mostly designed to be used in small, private servers.
@@ -17,16 +18,33 @@ This mod is licensed under GNU LGPLv3.
 
 ## Donating
 
-If you like this mod, consider [donating](https://buymeacoffee.com/eclipseisoffline)!
-It really helps me a ton!
+If you like this mod, consider [donating](https://buymeacoffee.com/eclipseisoffline).
+
+## Discord
+
+For support and/or any questions you may have, feel free to join [my discord](https://discord.gg/CNNkyWRkqm).
+
+## Version support
+
+| Minecraft Version | Actively developed       |
+|-------------------|--------------------------|
+| 1.21.4            | ✅ Current                |
+| 1.21.2+3          | ❌ Available, unsupported |
+| 1.21+1            | ✅ Current                |
+| 1.20.5+6          | ❌ Available, unsupported |
+| 1.20.4            | ❌ Available, unsupported |
+| 1.20.1            | ❌ Available, unsupported |
+| 1.19.4            | ❌ Available, unsupported |
+| 1.19.2            | ❌ Available, unsupported |
+
+I try to keep support up for the latest major and latest minor release of Minecraft. Updates to newer Minecraft
+versions may be delayed from time to time, as I do not always have the time to immediately update my mods.
 
 ## Usage
 
 Mod builds can be found [here](https://github.com/eclipseisoffline/customname/packages/2065010) and on [Modrinth](https://modrinth.com/mod/fabric-custom-names).
 
-This mod is oriented at Fabric Minecraft servers, but works on the client as well.
-This mod requires the Fabric API, and is currently available for Minecraft 1.21.2+3 and 1.21+1 (1.20.5+6, 1.20.4, 1.20.1, 1.19.4 and 1.19.2 ports exist, but are no longer updated).
-You can make a version port request at the issue tracker.
+This mod is oriented at Fabric Minecraft servers, but works on the client as well. This mod requires the Fabric API.
 
 The `/name` command can be used as follows:
 
