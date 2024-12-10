@@ -42,6 +42,8 @@ For support and/or any questions you may have, feel free to join [my discord](ht
 I try to keep support up for the latest major and latest minor release of Minecraft. Updates to newer Minecraft
 versions may be delayed from time to time, as I do not always have the time to immediately update my mods.
 
+Unsupported mods are still available to download, but they won't receive new features or bugfixes.
+
 ## Usage
 
 Mod builds can be found [here](https://github.com/eclipseisoffline/customname/packages/2065010) and on [Modrinth](https://modrinth.com/mod/fabric-custom-names).
