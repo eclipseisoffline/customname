@@ -39,7 +39,7 @@ public record CustomNameConfig(boolean formattingEnabled, boolean requirePermiss
 
     public boolean nameBlacklisted(String name) {
         for (Pattern blacklisted : blacklistedNames) {
-            if (blacklisted.matcher(name).matches()) {
+            if (blacklisted.matcher(name).find()) {
                 return true;
             }
         }
