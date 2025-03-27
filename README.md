@@ -28,16 +28,17 @@ For support and/or any questions you may have, feel free to join [my discord](ht
 
 ## Version support
 
-| Minecraft Version | Status                    |
-|-------------------|---------------------------|
-| 1.21.4            | ✅ Current                 |
-| 1.21.2+3          | ✔️ Available, unsupported |
-| 1.21+1            | ✅ Current                 |
-| 1.20.5+6          | ✔️ Available, unsupported |
-| 1.20.4            | ✔️ Available, unsupported |
-| 1.20.1            | ✔️ Available, unsupported |
-| 1.19.4            | ✔️ Available, unsupported |
-| 1.19.2            | ✔️ Available, unsupported |
+| Minecraft Version | Status       |
+|-------------------|--------------|
+| 1.21.5            | ✅ Current    |
+| 1.21.4            | ✔️ Available |
+| 1.21.2+3          | ✔️ Available |
+| 1.21+1            | ✅ Current    |
+| 1.20.5+6          | ✔️ Available |
+| 1.20.4            | ✔️ Available |
+| 1.20.1            | ✔️ Available |
+| 1.19.4            | ✔️ Available |
+| 1.19.2            | ✔️ Available |
 
 I try to keep support up for the latest major and latest minor release of Minecraft. Updates to newer Minecraft
 versions may be delayed from time to time, as I do not always have the time to immediately update my mods.
@@ -46,7 +47,7 @@ Unsupported versions are still available to download, but they won't receive new
 
 ## Usage
 
-Mod builds can be found [here](https://github.com/eclipseisoffline/customname/packages/2065010) and on [Modrinth](https://modrinth.com/mod/fabric-custom-names).
+Mod builds can be found on the releases page, as well as on [Modrinth](https://modrinth.com/mod/fabric-custom-names).
 
 This mod is oriented at Fabric Minecraft servers, but works on the client as well. This mod requires the Fabric API.
 

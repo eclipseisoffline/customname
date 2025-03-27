@@ -1,26 +1,60 @@
 package xyz.eclipseisoffline.eclipsescustomname;
 
-import com.google.gson.JsonParseException;
 import com.google.gson.JsonParser;
+
+import java.io.StringReader;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+
+import com.google.gson.Strictness;
+import com.google.gson.stream.JsonReader;
+import com.mojang.datafixers.util.Either;
+import com.mojang.datafixers.util.Pair;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.DataResult;
+import com.mojang.serialization.DynamicOps;
+import com.mojang.serialization.JsonOps;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.luckperms.api.LuckPerms;
 import net.luckperms.api.LuckPermsProvider;
 import net.luckperms.api.event.user.UserDataRecalculateEvent;
 import net.luckperms.api.model.user.User;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.registry.RegistryWrapper;
+import net.minecraft.registry.RegistryOps;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
+import net.minecraft.text.TextCodecs;
+import net.minecraft.util.Uuids;
 import net.minecraft.world.PersistentState;
-import net.minecraft.world.PersistentStateManager;
+import net.minecraft.world.PersistentStateType;
 import net.minecraft.world.World;
 
 public class PlayerNameManager extends PersistentState {
+    private static final Codec<Text> LEGACY_TEXT_CODEC = new Codec<>() {
+        @Override
+        public <T> DataResult<Pair<Text, T>> decode(DynamicOps<T> ops, T input) {
+            if (ops instanceof RegistryOps<?> registryOps) {
+                return ops.getStringValue(input).map(string -> {
+                    JsonReader reader = new JsonReader(new StringReader(string));
+                    reader.setStrictness(Strictness.LENIENT);
+                    return JsonParser.parseReader(reader);
+                }).flatMap(element -> TextCodecs.CODEC.parse(registryOps.withDelegate(JsonOps.INSTANCE), element))
+                        .map(text -> Pair.of(text, ops.empty()));
+            }
+            return DataResult.error(() -> "Decoding text requires registry ops");
+        }
+
+        @Override
+        public <T> DataResult<T> encode(Text input, DynamicOps<T> ops, T prefix) {
+            return DataResult.error(() -> "Unsupported operation; legacy codec should not be used to encode");
+        }
+    };
+    private static final Codec<Text> NAME_TEXT_CODEC = Codec.either(LEGACY_TEXT_CODEC, TextCodecs.CODEC).xmap(either -> either.left().orElseGet(() -> either.right().orElseThrow()), Either::right);
+
+    private static final Codec<Map<UUID, Text>> NAME_MAP_CODEC = Codec.unboundedMap(Uuids.STRING_CODEC, NAME_TEXT_CODEC);
+
     private final CustomNameConfig config;
     private final Map<UUID, Text> playerPrefixes = new HashMap<>();
     private final Map<UUID, Text> playerSuffixes = new HashMap<>();
@@ -28,8 +62,11 @@ public class PlayerNameManager extends PersistentState {
     private final Map<UUID, Text> fullPlayerNames = new HashMap<>();
     private final LuckPerms luckPerms;
 
-    private PlayerNameManager(MinecraftServer server, CustomNameConfig config) {
+    private PlayerNameManager(MinecraftServer server, CustomNameConfig config, Map<UUID, Text> prefixes, Map<UUID, Text> nicknames, Map<UUID, Text> suffixes) {
         this.config = config;
+        this.playerPrefixes.putAll(prefixes);
+        this.playerNicknames.putAll(nicknames);
+        this.playerSuffixes.putAll(suffixes);
 
         LuckPerms luckPerms;
         String luckPermsState = "found";
@@ -118,68 +155,19 @@ public class PlayerNameManager extends PersistentState {
         fullPlayerNames.put(player.getUuid(), name);
     }
 
-    @Override
-    public NbtCompound writeNbt(NbtCompound nbt, RegistryWrapper.WrapperLookup registries) {
-        nbt.put("prefixes", writeNames(playerPrefixes, registries));
-        nbt.put("suffixes", writeNames(playerSuffixes, registries));
-        nbt.put("nicknames", writeNames(playerNicknames, registries));
-        return nbt;
-    }
-
-    private static NbtCompound writeNames(Map<UUID, Text> names, RegistryWrapper.WrapperLookup registries) {
-        NbtCompound namesTag = new NbtCompound();
-        names.forEach((uuid, text) -> {
-            if (text != null) {
-                namesTag.putString(uuid.toString(), Text.Serialization.toJsonString(text, registries));
-            }
-        });
-        return namesTag;
-    }
-
-    public static PlayerNameManager loadFromNbt(NbtCompound nbtCompound,
-            RegistryWrapper.WrapperLookup registries, MinecraftServer server, CustomNameConfig config) {
-        PlayerNameManager playerNameManager = new PlayerNameManager(server, config);
-
-        NbtCompound prefixes = nbtCompound.getCompound("prefixes");
-        readNames(prefixes, playerNameManager.playerPrefixes, registries);
-        NbtCompound suffixes = nbtCompound.getCompound("suffixes");
-        readNames(suffixes, playerNameManager.playerSuffixes, registries);
-        NbtCompound nicknames = nbtCompound.getCompound("nicknames");
-        readNames(nicknames, playerNameManager.playerNicknames, registries);
-
-        return playerNameManager;
-    }
-
-    private static void readNames(NbtCompound compound, Map<UUID, Text> nameMap,
-            RegistryWrapper.WrapperLookup registries) {
-        compound.getKeys().forEach(key -> {
-            Text name;
-            String raw = compound.getString(key);
-            boolean old;
-            try {
-                old = !JsonParser.parseString(raw).isJsonObject();
-            } catch (JsonParseException exception) {
-                old = true;
-            }
-            if (old) {
-                CustomName.LOGGER.info("Converting old name of " + key + " to new format");
-                name = CustomName.argumentToText(raw.replaceAll("\"", "").replaceAll(
-                                String.valueOf(Formatting.FORMATTING_CODE_PREFIX), "&"),
-                        true, false, false);
-            } else {
-                name = Text.Serialization.fromJson(compound.getString(key), registries);
-            }
-            nameMap.put(UUID.fromString(key), name);
-        });
+    private static PersistentStateType<PlayerNameManager> type(MinecraftServer server, CustomNameConfig config) {
+        Codec<PlayerNameManager> codec = RecordCodecBuilder.create(instance ->
+                instance.group(
+                        NAME_MAP_CODEC.fieldOf("prefixes").forGetter(manager -> manager.playerPrefixes),
+                        NAME_MAP_CODEC.fieldOf("nicknames").forGetter(manager -> manager.playerNicknames),
+                        NAME_MAP_CODEC.fieldOf("suffixes").forGetter(manager -> manager.playerSuffixes)
+                ).apply(instance, (prefixes, nicknames, suffixes) -> new PlayerNameManager(server, config, prefixes, nicknames, suffixes))
+        );
+        return new PersistentStateType<>(CustomName.MOD_ID, () -> new PlayerNameManager(server, config, Map.of(), Map.of(), Map.of()), codec, null);
     }
 
     public static PlayerNameManager getPlayerNameManager(MinecraftServer server, CustomNameConfig config) {
-        PersistentStateManager persistentStateManager = server.getWorld(World.OVERWORLD)
-                .getPersistentStateManager();
-        return persistentStateManager.getOrCreate(new Type<>(
-                () -> new PlayerNameManager(server, config),
-                        (nbt, registries) -> loadFromNbt(nbt, registries, server, config), null),
-                CustomName.MOD_ID);
+        return server.getWorld(World.OVERWORLD).getPersistentStateManager().getOrCreate(type(server, config));
     }
 
     public enum NameType {
