@@ -1,8 +1,8 @@
-import java.nio.file.Files
+import me.modmuss50.mpp.ReleaseType
 
 plugins {
-    id "fabric-loom" version "1.8-SNAPSHOT"
-    id "maven-publish"
+    id 'me.modmuss50.mod-publish-plugin' version '0.8.4'
+    id "fabric-loom" version "1.10-SNAPSHOT"
 }
 
 version = project.mod_version
@@ -42,7 +42,7 @@ processResources {
     }
 }
 
-def targetJavaVersion = 17
+def targetJavaVersion = 21
 tasks.withType(JavaCompile).configureEach {
     it.options.encoding = "UTF-8"
     if (targetJavaVersion >= 10 || JavaVersion.current().isJava10Compatible()) {
@@ -64,23 +64,22 @@ jar {
     }
 }
 
-publishing {
-    repositories {
-        maven {
-            name = "GithubPackages"
-            url = uri("https://maven.pkg.github.com/eclipseisoffline/customname")
-            credentials {
-                username = "eclipseisoffline"
-                password = Files.readString(java.nio.file.Path.of("./github_auth"))
-            }
-        }
+publishMods {
+    changelog = new File("CHANGELOG.md").text
+    type = ReleaseType.of(release_type)
+
+    file = remapJar.archiveFile
+    modLoaders.add("fabric")
+
+    modrinth {
+        accessToken = providers.gradleProperty("MODRINTH_API_TOKEN")
+        projectId = "saIlazMs"
+        minecraftVersions.addAll(release_minecraft_versions.split(","))
     }
 
-    publications {
-        gpr(MavenPublication) {
-            artifactId project.archives_base_name
-
-            from components.java
-        }
+    github {
+        accessToken = providers.gradleProperty("GITHUB_API_PUBLISH_TOKEN")
+        repository = "eclipseisoffline/customname"
+        commitish = "main"
     }
 }
