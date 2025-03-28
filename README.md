@@ -91,7 +91,8 @@ By default, the configuration file looks like this:
   "require_permissions": true,
   "blacklisted_names": [],
   "max_name_length": 16,
-  "operators_bypass_restrictions": false
+  "operators_bypass_restrictions": false,
+  "display_above_player": false
 }
 ```
 
@@ -100,3 +101,4 @@ By default, the configuration file looks like this:
 - `blacklisted_names` is a list of regexes that are blacklisted. When a prefix, suffix or nickname matches one of these regexes, they won't be able to be used.
 - `max_name_length` controls how long a player prefix/nickname/suffix can be, which can be 32 at most.
 - `operators_bypass_restrictions` can be used to disable name restrictions for operators. When this is enabled, operators and people with the permission `customname.bypass_restrictions` can use spaces in nicknames, bypass the max length restriction, and more.
+- `display_above_player` controls whether the player's custom name should display above their head in game. This is currently not compatible with hiding name tags using teams.
