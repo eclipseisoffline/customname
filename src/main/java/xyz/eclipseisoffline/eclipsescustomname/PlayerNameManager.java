@@ -30,6 +30,7 @@ import net.minecraft.util.Uuids;
 import net.minecraft.world.PersistentState;
 import net.minecraft.world.PersistentStateType;
 import net.minecraft.world.World;
+import xyz.eclipseisoffline.eclipsescustomname.network.FakeTextDisplayHolder;
 
 public class PlayerNameManager extends PersistentState {
     private static final Codec<Text> LEGACY_TEXT_CODEC = new Codec<>() {
@@ -153,6 +154,7 @@ public class PlayerNameManager extends PersistentState {
         }
 
         fullPlayerNames.put(player.getUuid(), name);
+        ((FakeTextDisplayHolder) player).customName$updateName();
     }
 
     private static PersistentStateType<PlayerNameManager> type(MinecraftServer server, CustomNameConfig config) {

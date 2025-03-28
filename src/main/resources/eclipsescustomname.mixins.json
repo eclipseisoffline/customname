@@ -4,8 +4,13 @@
   "package": "xyz.eclipseisoffline.eclipsescustomname.mixin",
   "compatibilityLevel": "JAVA_17",
   "mixins": [
-    "PlayerEntityMixin",
-    "ServerPlayerEntityMixin"
+    "entity.DisplayEntityAccessor",
+    "entity.DisplayEntityAccessor$TextDisplayEntityAccessor",
+    "entity.EntityAccessor",
+    "entity.PlayerEntityMixin",
+    "entity.ServerPlayerEntityMixin",
+    "network.EntityPassengersSetS2CPacketMixin",
+    "network.ServerCommonNetworkHandlerMixin"
   ],
   "client": [],
   "injectors": {
