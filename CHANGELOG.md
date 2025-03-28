@@ -1,4 +1,5 @@
 - Update to 1.21.5.
+- Added the `display_above_player` configuration option, which controls whether the player's custom name should display above their head in game. Currently incompatible with hiding name tags using teams.
 - Player prefixes, nicknames, and suffixes are now stored as NBT text components, rather than JSON strings.
 
 Please note! With this update, changes have been made to the way player names are stored. Backwards compatibility has
