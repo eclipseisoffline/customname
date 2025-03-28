@@ -9,8 +9,6 @@ import org.spongepowered.asm.mixin.Mutable;
 import org.spongepowered.asm.mixin.Shadow;
 import xyz.eclipseisoffline.eclipsescustomname.network.CustomEntityPassengersPacket;
 
-import java.util.Arrays;
-
 @Mixin(EntityPassengersSetS2CPacket.class)
 public abstract class EntityPassengersSetS2CPacketMixin implements Packet<ClientPlayPacketListener>, CustomEntityPassengersPacket {
 

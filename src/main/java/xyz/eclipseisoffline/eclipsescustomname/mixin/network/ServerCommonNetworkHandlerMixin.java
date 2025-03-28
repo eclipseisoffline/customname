@@ -15,8 +15,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import xyz.eclipseisoffline.eclipsescustomname.network.CustomEntityPassengersPacket;
 import xyz.eclipseisoffline.eclipsescustomname.network.FakeTextDisplayHolder;
 
-import java.util.Arrays;
-
 @Mixin(ServerCommonNetworkHandler.class)
 public abstract class ServerCommonNetworkHandlerMixin implements ServerCommonPacketListener {
 

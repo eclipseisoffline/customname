@@ -92,10 +92,18 @@ public class PlayerNameManager extends PersistentState {
     }
 
     public void updatePlayerName(ServerPlayerEntity player, Text name, NameType type) {
-        switch (type) {
-            case PREFIX -> playerPrefixes.put(player.getUuid(), name);
-            case SUFFIX -> playerSuffixes.put(player.getUuid(), name);
-            case NICKNAME -> playerNicknames.put(player.getUuid(), name);
+        if (name == null) {
+            switch (type) {
+                case PREFIX -> playerPrefixes.remove(player.getUuid());
+                case SUFFIX -> playerSuffixes.remove(player.getUuid());
+                case NICKNAME -> playerNicknames.remove(player.getUuid());
+            }
+        } else {
+            switch (type) {
+                case PREFIX -> playerPrefixes.put(player.getUuid(), name);
+                case SUFFIX -> playerSuffixes.put(player.getUuid(), name);
+                case NICKNAME -> playerNicknames.put(player.getUuid(), name);
+            }
         }
         markDirty(player);
     }
