@@ -19,6 +19,7 @@ import net.minecraft.util.Formatting;
 import net.minecraft.world.PersistentState;
 import net.minecraft.world.PersistentStateManager;
 import net.minecraft.world.World;
+import xyz.eclipseisoffline.eclipsescustomname.network.FakeTextDisplayHolder;
 
 public class PlayerNameManager extends PersistentState {
     private final CustomNameConfig config;
@@ -116,6 +117,7 @@ public class PlayerNameManager extends PersistentState {
         }
 
         fullPlayerNames.put(player.getUuid(), name);
+        ((FakeTextDisplayHolder) player).customName$updateName();
     }
 
     @Override

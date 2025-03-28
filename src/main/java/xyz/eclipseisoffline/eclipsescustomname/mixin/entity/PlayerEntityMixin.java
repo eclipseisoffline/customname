@@ -1,4 +1,4 @@
-package xyz.eclipseisoffline.eclipsescustomname.mixin;
+package xyz.eclipseisoffline.eclipsescustomname.mixin.entity;
 
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
@@ -20,11 +20,10 @@ public abstract class PlayerEntityMixin extends LivingEntity {
         super(entityType, world);
     }
 
-    @Redirect(method = "getDisplayName", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;getName()Lnet/minecraft/text/Text;"))
+    @Redirect(method = "getDisplayName", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;getName()Lnet/minecraft/text/Text;")) // TODO wrapop
     public Text setCustomName(PlayerEntity player) {
         if (player instanceof ServerPlayerEntity serverPlayer) {
-            return PlayerNameManager.getPlayerNameManager(serverPlayer.server, CustomName.getConfig())
-                    .getFullPlayerName(serverPlayer);
+            return PlayerNameManager.getPlayerNameManager(serverPlayer.server, CustomName.getConfig()).getFullPlayerName(serverPlayer);
         }
         return player.getName();
     }
