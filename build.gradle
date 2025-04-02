@@ -3,6 +3,7 @@ import me.modmuss50.mpp.ReleaseType
 plugins {
     id 'me.modmuss50.mod-publish-plugin' version '0.8.4'
     id "fabric-loom" version "1.10-SNAPSHOT"
+    id 'maven-publish'
 }
 
 version = project.mod_version
@@ -62,6 +63,30 @@ jar {
     from("LICENSE") {
         rename { "${it}_${project.archivesBaseName}"}
     }
+}
+
+publishing {
+    repositories {
+        maven {
+            name = "eclipseisoffline"
+            url = "https://maven.eclipseisoffline.xyz/releases"
+            credentials(PasswordCredentials)
+            authentication {
+                basic(BasicAuthentication)
+            }
+        }
+    }
+
+    publications {
+        maven(MavenPublication) {
+            artifactId = project.archives_base_name
+            from components.java
+        }
+    }
+}
+
+publish {
+    dependsOn(publishMods)
 }
 
 publishMods {
