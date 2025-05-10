@@ -66,14 +66,28 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntity implements Fa
     @Inject(method = "setPlayerInput", at = @At("HEAD"))
     public void updateTextDisplays(PlayerInput newInput, CallbackInfo callbackInfo) {
         if (fakeTextDisplayIds.length > 0 && newInput.sneak() != playerInput.sneak()) {
-            byte flags = (byte) (newInput.sneak() ? 0 : 1 << 1);
-            Text text = newInput.sneak() ? Text.empty() : getDisplayName();
+            byte flags = (byte) (newInput.sneak() ? 0 : 1 << 1); // See through blocks when not sneaking
+            Text text = isInvisible() || newInput.sneak() ? Text.empty() : getDisplayName();
 
             getServerWorld().getChunkManager().sendToOtherNearbyPlayers(this, new EntityTrackerUpdateS2CPacket(fakeTextDisplayIds[0],
                     List.of(DataTracker.SerializedEntry.of(DisplayEntityAccessor.TextDisplayEntityAccessor.getTextDisplayFlags(), flags))));
             getServerWorld().getChunkManager().sendToOtherNearbyPlayers(this, new EntityTrackerUpdateS2CPacket(fakeTextDisplayIds[1],
                     List.of(DataTracker.SerializedEntry.of(DisplayEntityAccessor.TextDisplayEntityAccessor.getTextData(), text))));
         }
+    }
+
+    @Override
+    protected void setFlag(int index, boolean value) {
+        // Invisible flag
+        if (fakeTextDisplayIds.length > 0 && index == 5) {
+            Text text = value ? Text.empty() : getDisplayName();
+
+            getServerWorld().getChunkManager().sendToOtherNearbyPlayers(this, new EntityTrackerUpdateS2CPacket(fakeTextDisplayIds[0],
+                    List.of(DataTracker.SerializedEntry.of(DisplayEntityAccessor.TextDisplayEntityAccessor.getTextData(), text))));
+            getServerWorld().getChunkManager().sendToOtherNearbyPlayers(this, new EntityTrackerUpdateS2CPacket(fakeTextDisplayIds[1],
+                    List.of(DataTracker.SerializedEntry.of(DisplayEntityAccessor.TextDisplayEntityAccessor.getTextData(), text))));
+        }
+        super.setFlag(index, value);
     }
 
     @Override
