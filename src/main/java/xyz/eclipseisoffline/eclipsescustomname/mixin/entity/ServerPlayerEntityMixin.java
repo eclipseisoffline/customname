@@ -36,7 +36,8 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntity implements Fa
     @Shadow
     private PlayerInput playerInput;
 
-    @Shadow public abstract ServerWorld getServerWorld();
+    @Shadow
+    public abstract ServerWorld getServerWorld();
 
     @Unique
     private int[] fakeTextDisplayIds = new int[0];
@@ -87,14 +88,14 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntity implements Fa
             player.networkHandler.sendPacket(new EntityTrackerUpdateS2CPacket(fakeTextDisplayIds[0],
                     List.of(DataTracker.SerializedEntry.of(DisplayEntityAccessor.TextDisplayEntityAccessor.getTextData(), getDisplayName()),
                             DataTracker.SerializedEntry.of(DisplayEntityAccessor.getTranslationData(), new Vector3f(0.0F, 0.2F, 0.0F)),
-                            DataTracker.SerializedEntry.of(DisplayEntityAccessor.getBillboardData(), (byte) 1), // Vertical billboard
+                            DataTracker.SerializedEntry.of(DisplayEntityAccessor.getBillboardData(), (byte) 3), // Centre billboard
                             DataTracker.SerializedEntry.of(DisplayEntityAccessor.TextDisplayEntityAccessor.getTextOpacityData(), (byte) 127),
                             DataTracker.SerializedEntry.of(DisplayEntityAccessor.TextDisplayEntityAccessor.getTextDisplayFlags(), (byte) (1 << 1))))); // See through blocks
 
             player.networkHandler.sendPacket(new EntityTrackerUpdateS2CPacket(fakeTextDisplayIds[1],
                     List.of(DataTracker.SerializedEntry.of(DisplayEntityAccessor.TextDisplayEntityAccessor.getTextData(), getDisplayName()),
                             DataTracker.SerializedEntry.of(DisplayEntityAccessor.getTranslationData(), new Vector3f(0.0F, 0.2F, 0.0F)),
-                            DataTracker.SerializedEntry.of(DisplayEntityAccessor.getBillboardData(), (byte) 1), // Vertical billboard
+                            DataTracker.SerializedEntry.of(DisplayEntityAccessor.getBillboardData(), (byte) 3), // Centre billboard
                             DataTracker.SerializedEntry.of(DisplayEntityAccessor.TextDisplayEntityAccessor.getBackgroundData(), 0))));
         }
     }
