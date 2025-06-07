@@ -12,7 +12,6 @@ import java.util.function.Predicate;
 import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
-import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.command.argument.EntityArgumentType;
 import net.minecraft.component.ComponentType;
@@ -32,7 +31,6 @@ import net.minecraft.util.Hand;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import xyz.eclipseisoffline.eclipsescustomname.PlayerNameManager.NameType;
-import xyz.eclipseisoffline.eclipsescustomname.network.FakeTextDisplayHolder;
 
 public class CustomName implements ModInitializer {
 
@@ -156,12 +154,6 @@ public class CustomName implements ModInitializer {
                                     .executes(resetItemComponent(DataComponentTypes.LORE, "item lore"))
                     );
                 }));
-
-        ServerLifecycleEvents.SERVER_STARTED.register(server -> server.getScoreboard().addUpdateListener(() -> {
-            for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
-                ((FakeTextDisplayHolder) player).customName$updateName();
-            }
-        }));
     }
 
     private LiteralArgumentBuilder<ServerCommandSource> playerNameCommand(PlayerNameManager.NameType nameType) {

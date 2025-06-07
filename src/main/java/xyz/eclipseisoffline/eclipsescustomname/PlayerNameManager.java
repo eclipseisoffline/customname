@@ -52,7 +52,7 @@ public class PlayerNameManager extends PersistentState {
             return DataResult.error(() -> "Unsupported operation; legacy codec should not be used to encode");
         }
     };
-    private static final Codec<Text> NAME_TEXT_CODEC = Codec.either(LEGACY_TEXT_CODEC, TextCodecs.CODEC).xmap(either -> either.left().orElseGet(() -> either.right().orElseThrow()), Either::right);
+    private static final Codec<Text> NAME_TEXT_CODEC = Codec.either(LEGACY_TEXT_CODEC, TextCodecs.CODEC).xmap(Either::unwrap, Either::right);
 
     private static final Codec<Map<UUID, Text>> NAME_MAP_CODEC = Codec.unboundedMap(Uuids.STRING_CODEC, NAME_TEXT_CODEC);
 
