@@ -67,27 +67,24 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntity implements Fa
     public void updateTextDisplays(PlayerInput newInput, CallbackInfo callbackInfo) {
         if (fakeTextDisplayIds.length > 0 && newInput.sneak() != playerInput.sneak()) {
             byte flags = (byte) (newInput.sneak() ? 0 : 1 << 1); // See through blocks when not sneaking
-            Text text = isInvisible() || newInput.sneak() ? Text.empty() : getDisplayName();
 
             getServerWorld().getChunkManager().sendToOtherNearbyPlayers(this, new EntityTrackerUpdateS2CPacket(fakeTextDisplayIds[0],
                     List.of(DataTracker.SerializedEntry.of(DisplayEntityAccessor.TextDisplayEntityAccessor.getTextDisplayFlags(), flags))));
             getServerWorld().getChunkManager().sendToOtherNearbyPlayers(this, new EntityTrackerUpdateS2CPacket(fakeTextDisplayIds[1],
-                    List.of(DataTracker.SerializedEntry.of(DisplayEntityAccessor.TextDisplayEntityAccessor.getTextData(), text))));
+                    List.of(DataTracker.SerializedEntry.of(DisplayEntityAccessor.TextDisplayEntityAccessor.getTextData(), displayNameText(newInput, true)))));
         }
     }
 
     @Override
     protected void setFlag(int index, boolean value) {
+        super.setFlag(index, value);
         // Invisible flag
         if (fakeTextDisplayIds.length > 0 && index == 5) {
-            Text text = value ? Text.empty() : getDisplayName();
-
             getServerWorld().getChunkManager().sendToOtherNearbyPlayers(this, new EntityTrackerUpdateS2CPacket(fakeTextDisplayIds[0],
-                    List.of(DataTracker.SerializedEntry.of(DisplayEntityAccessor.TextDisplayEntityAccessor.getTextData(), text))));
+                    List.of(DataTracker.SerializedEntry.of(DisplayEntityAccessor.TextDisplayEntityAccessor.getTextData(), displayNameText(playerInput, false)))));
             getServerWorld().getChunkManager().sendToOtherNearbyPlayers(this, new EntityTrackerUpdateS2CPacket(fakeTextDisplayIds[1],
-                    List.of(DataTracker.SerializedEntry.of(DisplayEntityAccessor.TextDisplayEntityAccessor.getTextData(), text))));
+                    List.of(DataTracker.SerializedEntry.of(DisplayEntityAccessor.TextDisplayEntityAccessor.getTextData(), displayNameText(playerInput, true)))));
         }
-        super.setFlag(index, value);
     }
 
     @Override
@@ -100,14 +97,14 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntity implements Fa
             player.networkHandler.sendPacket(new EntityPassengersSetS2CPacket(this)); // Text display passenger is added through mixin in network handler to increase compatibility with other mods
 
             player.networkHandler.sendPacket(new EntityTrackerUpdateS2CPacket(fakeTextDisplayIds[0],
-                    List.of(DataTracker.SerializedEntry.of(DisplayEntityAccessor.TextDisplayEntityAccessor.getTextData(), getDisplayName()),
+                    List.of(DataTracker.SerializedEntry.of(DisplayEntityAccessor.TextDisplayEntityAccessor.getTextData(), displayNameText(playerInput, false)),
                             DataTracker.SerializedEntry.of(DisplayEntityAccessor.getTranslationData(), new Vector3f(0.0F, 0.2F, 0.0F)),
                             DataTracker.SerializedEntry.of(DisplayEntityAccessor.getBillboardData(), (byte) 3), // Centre billboard
                             DataTracker.SerializedEntry.of(DisplayEntityAccessor.TextDisplayEntityAccessor.getTextOpacityData(), (byte) 127),
-                            DataTracker.SerializedEntry.of(DisplayEntityAccessor.TextDisplayEntityAccessor.getTextDisplayFlags(), (byte) (1 << 1))))); // See through blocks
+                            DataTracker.SerializedEntry.of(DisplayEntityAccessor.TextDisplayEntityAccessor.getTextDisplayFlags(), playerInput.sneak() ? (byte) 0 : (byte) (1 << 1))))); // See through blocks when not sneaking
 
             player.networkHandler.sendPacket(new EntityTrackerUpdateS2CPacket(fakeTextDisplayIds[1],
-                    List.of(DataTracker.SerializedEntry.of(DisplayEntityAccessor.TextDisplayEntityAccessor.getTextData(), getDisplayName()),
+                    List.of(DataTracker.SerializedEntry.of(DisplayEntityAccessor.TextDisplayEntityAccessor.getTextData(), displayNameText(playerInput, true)),
                             DataTracker.SerializedEntry.of(DisplayEntityAccessor.getTranslationData(), new Vector3f(0.0F, 0.2F, 0.0F)),
                             DataTracker.SerializedEntry.of(DisplayEntityAccessor.getBillboardData(), (byte) 3), // Centre billboard
                             DataTracker.SerializedEntry.of(DisplayEntityAccessor.TextDisplayEntityAccessor.getBackgroundData(), 0))));
@@ -124,16 +121,20 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntity implements Fa
     @Override
     public void customName$updateName() {
         if (fakeTextDisplayIds.length > 0) {
-            Text newName = getDisplayName();
             getServerWorld().getChunkManager().sendToOtherNearbyPlayers(this, new EntityTrackerUpdateS2CPacket(fakeTextDisplayIds[0],
-                    List.of(DataTracker.SerializedEntry.of(DisplayEntityAccessor.TextDisplayEntityAccessor.getTextData(), newName))));
+                    List.of(DataTracker.SerializedEntry.of(DisplayEntityAccessor.TextDisplayEntityAccessor.getTextData(), displayNameText(playerInput, false)))));
             getServerWorld().getChunkManager().sendToOtherNearbyPlayers(this, new EntityTrackerUpdateS2CPacket(fakeTextDisplayIds[1],
-                    List.of(DataTracker.SerializedEntry.of(DisplayEntityAccessor.TextDisplayEntityAccessor.getTextData(), newName))));
+                    List.of(DataTracker.SerializedEntry.of(DisplayEntityAccessor.TextDisplayEntityAccessor.getTextData(), displayNameText(playerInput, true)))));
         }
     }
 
     @Override
     public int[] customName$getFakeTextDisplayIds() {
         return fakeTextDisplayIds;
+    }
+
+    @Unique
+    private Text displayNameText(PlayerInput input, boolean disappearWhenSneaking) {
+        return isInvisible() || (input.sneak() && disappearWhenSneaking) ? Text.empty() : getDisplayName();
     }
 }
