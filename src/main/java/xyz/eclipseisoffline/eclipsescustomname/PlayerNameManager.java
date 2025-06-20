@@ -52,6 +52,8 @@ public class PlayerNameManager extends PersistentState {
             return DataResult.error(() -> "Unsupported operation; legacy codec should not be used to encode");
         }
     };
+    // Order is important here: we should attempt LEGACY_TEXT_CODEC here, and not go straight to trying to parse a text component from NBT
+    // The latter would just put the entire legacy JSON string as a literal component
     private static final Codec<Text> NAME_TEXT_CODEC = Codec.either(LEGACY_TEXT_CODEC, TextCodecs.CODEC).xmap(Either::unwrap, Either::right);
 
     private static final Codec<Map<UUID, Text>> NAME_MAP_CODEC = Codec.unboundedMap(Uuids.STRING_CODEC, NAME_TEXT_CODEC);
