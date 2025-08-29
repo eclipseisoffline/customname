@@ -13,6 +13,7 @@ import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.loader.api.FabricLoader;
+import net.minecraft.command.CommandSource;
 import net.minecraft.command.argument.EntityArgumentType;
 import net.minecraft.component.ComponentType;
 import net.minecraft.component.DataComponentTypes;
@@ -30,7 +31,6 @@ import net.minecraft.util.Formatting;
 import net.minecraft.util.Hand;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import xyz.eclipseisoffline.eclipsescustomname.PlayerNameManager.NameType;
 
 public class CustomName implements ModInitializer {
 
@@ -54,6 +54,7 @@ public class CustomName implements ModInitializer {
                     dispatcher.register(
                             CommandManager.literal("name")
                                     .then(CommandManager.literal("other")
+                                            .requires(permissionCheck("customname.other"))
                                             .then(otherPlayerNameCommand(NameType.PREFIX))
                                             .then(otherPlayerNameCommand(NameType.SUFFIX))
                                             .then(otherPlayerNameCommand(NameType.NICKNAME))
@@ -128,8 +129,7 @@ public class CustomName implements ModInitializer {
                                                         Text argument = argumentToText(line, true, true, true);
 
                                                         if (Formatting.strip(argument.getString()).isEmpty()) {
-                                                            throw new SimpleCommandExceptionType(
-                                                                    Text.of("Invalid item lore")).create();
+                                                            throw new SimpleCommandExceptionType(Text.of("Invalid item lore")).create();
                                                         }
                                                         arguments.add(argument);
                                                     }
@@ -142,7 +142,7 @@ public class CustomName implements ModInitializer {
                                                 context.getSource().sendFeedback(
                                                         () -> {
                                                             if (arguments.size() == 1) {
-                                                                return Text.literal("Set item lore to ").append(arguments.get(0));
+                                                                return Text.literal("Set item lore to ").append(arguments.getFirst());
                                                             } else {
                                                                 return Text.literal("Updated item lore");
                                                             }
@@ -156,7 +156,7 @@ public class CustomName implements ModInitializer {
                 }));
     }
 
-    private LiteralArgumentBuilder<ServerCommandSource> playerNameCommand(PlayerNameManager.NameType nameType) {
+    private LiteralArgumentBuilder<ServerCommandSource> playerNameCommand(NameType nameType) {
         return CommandManager.literal(nameType.getName())
                 .requires(permissionCheck(nameType.getPermission()).and(ServerCommandSource::isExecutedByPlayer))
                 .then(CommandManager.argument("name", StringArgumentType.greedyString())
@@ -165,7 +165,7 @@ public class CustomName implements ModInitializer {
                 .executes(clearPlayerName(nameType, false));
     }
 
-    private LiteralArgumentBuilder<ServerCommandSource> otherPlayerNameCommand(PlayerNameManager.NameType nameType) {
+    private LiteralArgumentBuilder<ServerCommandSource> otherPlayerNameCommand(NameType nameType) {
         return CommandManager.literal(nameType.getName())
                 .requires(permissionCheck(nameType.getPermission()).and(permissionCheck("customname.other")))
                 .then(CommandManager.argument("player", EntityArgumentType.player())
@@ -176,7 +176,7 @@ public class CustomName implements ModInitializer {
                 );
     }
 
-    private Command<ServerCommandSource> updatePlayerName(PlayerNameManager.NameType nameType, boolean other) {
+    private Command<ServerCommandSource> updatePlayerName(NameType nameType, boolean other) {
         return context -> {
             ServerPlayerEntity player = other ? EntityArgumentType.getPlayer(context, "player") : context.getSource().getPlayerOrThrow();
             Text name;
@@ -204,7 +204,7 @@ public class CustomName implements ModInitializer {
         };
     }
 
-    private Command<ServerCommandSource> clearPlayerName(PlayerNameManager.NameType nameType, boolean other) {
+    private Command<ServerCommandSource> clearPlayerName(NameType nameType, boolean other) {
         return context -> {
             ServerPlayerEntity player = other ? EntityArgumentType.getPlayer(context, "player") : context.getSource().getPlayerOrThrow();
 
@@ -240,17 +240,6 @@ public class CustomName implements ModInitializer {
         String name = Formatting.strip(argument.getString());
         assert name != null;
         return name.isEmpty() || (!bypassRestrictions && (config.nameBlacklisted(name) || name.length() > config.maxNameLength()));
-    }
-
-    private Predicate<ServerCommandSource> permissionCheck(String permission) {
-        if (config.requirePermissions()) {
-            return Permissions.require(permission, 2);
-        }
-        return (source) -> true;
-    }
-
-    private Text playerNameArgumentToText(String argument, boolean spaceAllowed) {
-        return argumentToText(argument, config.formattingEnabled(), spaceAllowed, false);
     }
 
     private static List<String> splitArgument(String argument) {
@@ -289,6 +278,10 @@ public class CustomName implements ModInitializer {
             strings.add(currentString.toString());
         }
         return strings;
+    }
+
+    public static Text playerNameArgumentToText(String argument, boolean spaceAllowed) {
+        return argumentToText(argument, config.formattingEnabled(), spaceAllowed, false);
     }
 
     public static Text argumentToText(String argument, boolean formattingEnabled,
@@ -388,10 +381,23 @@ public class CustomName implements ModInitializer {
         return Text.of(argument);
     }
 
+    public static Predicate<ServerCommandSource> permissionCheck(String permission) {
+        if (config.requirePermissions()) {
+            return Permissions.require(permission, 2);
+        }
+        return (source) -> true;
+    }
+
+    public static boolean checkPermission(CommandSource source, String permission) {
+        if (config.requirePermissions()) {
+            return Permissions.check(source, permission);
+        }
+        return true;
+    }
+
     public static void updateListName(ServerPlayerEntity player) {
         assert player.getServer() != null;
-        player.getServer().getPlayerManager()
-                .sendToAll(new PlayerListS2CPacket(Action.UPDATE_DISPLAY_NAME, player));
+        player.getServer().getPlayerManager().sendToAll(new PlayerListS2CPacket(Action.UPDATE_DISPLAY_NAME, player));
     }
 
     public static CustomNameConfig getConfig() {

@@ -30,6 +30,14 @@ dependencies {
     modCompileOnly "net.luckperms:api:${project.luckperms_api_version}"
 }
 
+loom {
+    runs {
+        server {
+            runDir = "run-server"
+        }
+    }
+}
+
 processResources {
     inputs.property "version", project.version
     inputs.property "supported_versions", project.supported_versions
