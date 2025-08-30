@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
+import com.mojang.brigadier.suggestion.SuggestionProvider;
 import com.mojang.datafixers.util.Pair;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
@@ -24,8 +25,12 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+
+import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.command.CommandSource;
+import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.text.Text;
 import net.minecraft.util.dynamic.Codecs;
 
@@ -102,7 +107,7 @@ public record CustomNameConfig(boolean formattingEnabled, boolean requirePermiss
     }
 
     public record CustomNameGroups(Map<NameType, Map<String, List<ParsedPlayerName>>> nameGroups,
-                                   List<String> groupPermissionNodes) {
+                                   Map<NameType, List<String>> groupPermissionNodes) {
         private static final Predicate<String> GROUP_NAME_PREDICATE = Pattern.compile("^([A-Z]|[a-z]|_)+$").asMatchPredicate();
         private static final Codec<String> GROUP_NAME_CODEC = Codec.STRING.validate(name -> {
             if (GROUP_NAME_PREDICATE.test(name)) {
@@ -116,12 +121,13 @@ public record CustomNameConfig(boolean formattingEnabled, boolean requirePermiss
 
         public CustomNameGroups(Map<NameType, Map<String, List<ParsedPlayerName>>> nameGroups) {
             this(nameGroups, nameGroups.entrySet().stream()
-                    .flatMap(entry -> entry.getValue().keySet().stream()
-                            .map(group -> getGroupPermissionNode(entry.getKey(), group)))
-                    .toList());
+                    .map(entry -> Pair.of(entry.getKey(), entry.getValue().keySet().stream()
+                            .map(group -> getGroupPermissionNode(entry.getKey(), group))
+                            .toList()))
+                    .collect(Collectors.toMap(Pair::getFirst, Pair::getSecond)));
         }
 
-        public List<Text> validNames(CommandSource source, NameType nameType) {
+        public List<ParsedPlayerName> validNames(ServerCommandSource source, NameType nameType) {
             Map<String, List<ParsedPlayerName>> groups = nameGroups.get(nameType);
             if (groups == null) {
                 return List.of();
@@ -134,11 +140,30 @@ public record CustomNameConfig(boolean formattingEnabled, boolean requirePermiss
                 }
             }
 
-            return names.stream().map(ParsedPlayerName::parsed).toList();
+            return List.copyOf(names);
+        }
+
+        public boolean validName(ServerCommandSource source, NameType nameType, Text name) {
+            return validNames(source, nameType).stream()
+                    .map(ParsedPlayerName::parsed)
+                    .anyMatch(Predicate.isEqual(name));
+        }
+
+        public Predicate<ServerCommandSource> partOfGroup(NameType type) {
+            return groupPermissionNodes.getOrDefault(type, List.of()).stream()
+                    .map(Permissions::require)
+                    .reduce(Predicate::or)
+                    .orElse(source -> false);
+        }
+
+        public SuggestionProvider<ServerCommandSource> createSuggestionsProvider(NameType nameType) {
+            return (context, builder) ->
+                    CommandSource.suggestMatching(validNames(context.getSource(), nameType).stream()
+                            .map(ParsedPlayerName::name), builder);
         }
 
         private static String getGroupPermissionNode(NameType nameType, String group) {
-            return "customname.group." + nameType.asString() + "." + group;
+            return CustomNameUtil.getPermissionNode("group." + nameType.asString() + "." + group);
         }
 
         static {

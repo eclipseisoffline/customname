@@ -4,9 +4,9 @@ import com.mojang.serialization.Codec;
 import net.minecraft.util.StringIdentifiable;
 
 public enum NameType implements StringIdentifiable {
-    PREFIX("prefix", "customname.prefix", "Prefix"),
-    SUFFIX("suffix", "customname.suffix", "Suffix"),
-    NICKNAME("nickname", "customname.nick", "Nickname");
+    PREFIX("prefix", "prefix", "Prefix"),
+    SUFFIX("suffix", "suffix", "Suffix"),
+    NICKNAME("nickname", "nick", "Nickname");
 
     public static final Codec<NameType> CODEC = StringIdentifiable.createCodec(NameType::values);
     
@@ -31,7 +31,7 @@ public enum NameType implements StringIdentifiable {
     }
 
     public String getPermission() {
-        return permission;
+        return CustomNameUtil.getPermissionNode(permission);
     }
 
     public String getDisplayName() {

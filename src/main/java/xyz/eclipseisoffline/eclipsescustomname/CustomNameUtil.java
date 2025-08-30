@@ -1,11 +1,9 @@
 package xyz.eclipseisoffline.eclipsescustomname;
 
-import com.mojang.serialization.Codec;
-import com.mojang.serialization.MapCodec;
-
-import java.util.Optional;
-
 public class CustomNameUtil {
+    private static final String ROOT_PERMISSION_NODE = "customname";
 
-
+    public static String getPermissionNode(String node) {
+        return ROOT_PERMISSION_NODE + "." + node;
+    }
 }

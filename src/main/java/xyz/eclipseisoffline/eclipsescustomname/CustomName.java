@@ -13,7 +13,6 @@ import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.command.CommandSource;
 import net.minecraft.command.argument.EntityArgumentType;
 import net.minecraft.component.ComponentType;
 import net.minecraft.component.DataComponentTypes;
@@ -158,8 +157,11 @@ public class CustomName implements ModInitializer {
 
     private LiteralArgumentBuilder<ServerCommandSource> playerNameCommand(NameType nameType) {
         return CommandManager.literal(nameType.getName())
-                .requires(permissionCheck(nameType.getPermission()).and(ServerCommandSource::isExecutedByPlayer))
+                .requires(permissionCheck(nameType.getPermission())
+                        .or(config.groups().partOfGroup(nameType))
+                        .and(ServerCommandSource::isExecutedByPlayer))
                 .then(CommandManager.argument("name", StringArgumentType.greedyString())
+                        .suggests(config.groups().createSuggestionsProvider(nameType))
                         .executes(updatePlayerName(nameType, false))
                 )
                 .executes(clearPlayerName(nameType, false));
@@ -188,7 +190,7 @@ public class CustomName implements ModInitializer {
                 throw new SimpleCommandExceptionType(Text.of(exception.getMessage())).create();
             }
 
-            if (invalidNameArgument(name, bypassRestrictions)) {
+            if (invalidNameArgument(context.getSource(), nameType, name, bypassRestrictions)) {
                 throw new SimpleCommandExceptionType(Text.of("That name is invalid")).create();
             }
 
@@ -236,7 +238,11 @@ public class CustomName implements ModInitializer {
         };
     }
 
-    private boolean invalidNameArgument(Text argument, boolean bypassRestrictions) {
+    private boolean invalidNameArgument(ServerCommandSource source, NameType nameType, Text argument, boolean bypassRestrictions) {
+        if (!checkPermission(source, nameType.getPermission()) && !config.groups().validName(source, nameType, argument)) {
+            return true;
+        }
+
         String name = Formatting.strip(argument.getString());
         assert name != null;
         return name.isEmpty() || (!bypassRestrictions && (config.nameBlacklisted(name) || name.length() > config.maxNameLength()));
@@ -388,9 +394,9 @@ public class CustomName implements ModInitializer {
         return (source) -> true;
     }
 
-    public static boolean checkPermission(CommandSource source, String permission) {
+    public static boolean checkPermission(ServerCommandSource source, String permission) {
         if (config.requirePermissions()) {
-            return Permissions.check(source, permission);
+            return Permissions.check(source, permission, 2);
         }
         return true;
     }
