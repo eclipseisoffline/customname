@@ -8,7 +8,8 @@
 ![GitHub License](https://img.shields.io/github/license/eclipseisoffline/customname)
 
 This mod adds a `/name`, a `/itemname` and a `/itemlore` command to Minecraft, which players can use to set a prefix, suffix, or nickname,
-or give their items colourful names and lore. Mostly designed to be used in small, private servers.
+or give their items colourful names and lore. Mostly designed to be used in small, private servers, although through the
+use of name groups you can also limit which players can use which prefixes/suffixes/nicknames.
 
 Supports prefixes/suffixes set with LuckPerms as well! 
 
@@ -93,7 +94,12 @@ By default, the configuration file looks like this:
   "blacklisted_names": [],
   "max_name_length": 16,
   "operators_bypass_restrictions": false,
-  "display_above_player": false
+  "display_above_player": false,
+  "name_groups": {
+    "prefix": {},
+    "nickname": {},
+    "suffix": {}
+  }
 }
 ```
 
@@ -103,3 +109,37 @@ By default, the configuration file looks like this:
 - `max_name_length` controls how long a player prefix/nickname/suffix can be, which can be 32 at most.
 - `operators_bypass_restrictions` can be used to disable name restrictions for operators. When this is enabled, operators and people with the permission `customname.bypass_restrictions` can use spaces in nicknames, bypass the max length restriction, and more.
 - `display_above_player` controls whether the player's custom name should display above their head in game. This is currently not compatible with hiding name tags using teams.
+- `name_groups` can be used to create name groups for each name type. Name groups consist of a list of names, which follow the same format used in name commands. You can assign players to one or more name groups by giving them permissions to the respective groups. They will then be able to use names listed in those groups.
+
+For example, consider this name groups config:
+
+```json
+"name_groups": {
+  "prefix": {
+    "vip": [
+      "&f&l[&7VIP&f&l]",
+      "&f&l[&9VIP&f&l]",
+      "&f&l[&aVIP&f&l]",
+      "&f&l[&bVIP&f&l]",
+      "&f&l[&cVIP&f&l]",
+    ],
+    "legendary": [
+      "&f&l[&7Legendary&f&l]",
+      "&f&l[&9Legendary&f&l]",
+      "&f&l[&aLegendary&f&l]",
+      "&f&l[&bLegendary&f&l]",
+      "&f&l[&cLegendary&f&l]",
+    ]
+  },
+  "nickname": {},
+  "suffix": {}
+}
+```
+
+You can then give players the `customname.group.prefix.vip` permission to allow them to use prefixes from the `vip` group,
+and the `customname.group.prefix.legendary` permission to allow them to use prefixes from the `legendary` group. Players
+will see these prefixes suggested when entering the `/name prefix` command, and, when running `/name prefix` without any
+arguments, a chat menu will allow them to select a prefix.
+
+Note that granting players the `customname.prefix` permission will still allow them to use any prefix. Everything said above
+also applies to nicknames and suffixes.

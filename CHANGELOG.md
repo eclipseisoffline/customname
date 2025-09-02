@@ -1,1 +1,3 @@
-- Update to 1.21.8.
+- Added name groups, which allow precise control over what prefixes/suffixes/nicknames players can use. Read the documentation for usage information.
+- Disabled Unicode escaping of HTML characters in the config file.
+- Some refactors.

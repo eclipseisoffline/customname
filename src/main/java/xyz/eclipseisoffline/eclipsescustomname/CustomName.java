@@ -36,6 +36,7 @@ import net.minecraft.util.Identifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+// TODO clean this up, commands to different class
 public class CustomName implements ModInitializer {
 
     public static final String MOD_ID = "eclipsescustomname";
