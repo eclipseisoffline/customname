@@ -117,6 +117,14 @@ public class PlayerNameManager extends PersistentState {
         return fullPlayerNames.get(player.getUuid());
     }
 
+    public Text getPlayerName(ServerPlayerEntity player, NameType nameType) {
+        return switch (nameType) {
+            case PREFIX -> playerPrefixes.get(player.getUuid());
+            case SUFFIX -> playerSuffixes.get(player.getUuid());
+            case NICKNAME -> playerNicknames.get(player.getUuid());
+        };
+    }
+
     private void markDirty(ServerPlayerEntity player) {
         updateFullPlayerName(player);
         markDirty();

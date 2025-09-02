@@ -72,6 +72,7 @@ public record CustomNameConfig(boolean formattingEnabled, boolean requirePermiss
 
         Gson gson = new GsonBuilder()
                 .setPrettyPrinting()
+                .disableHtmlEscaping()
                 .create();
 
         try (Writer writer = new FileWriter(configPath.toFile())) {
@@ -159,7 +160,7 @@ public record CustomNameConfig(boolean formattingEnabled, boolean requirePermiss
         public SuggestionProvider<ServerCommandSource> createSuggestionsProvider(NameType nameType) {
             return (context, builder) ->
                     CommandSource.suggestMatching(validNames(context.getSource(), nameType).stream()
-                            .map(ParsedPlayerName::name), builder);
+                            .map(ParsedPlayerName::raw), builder);
         }
 
         private static String getGroupPermissionNode(NameType nameType, String group) {

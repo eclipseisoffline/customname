@@ -3,11 +3,13 @@ package xyz.eclipseisoffline.eclipsescustomname;
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Predicate;
 import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.fabricmc.api.ModInitializer;
@@ -18,16 +20,19 @@ import net.minecraft.component.ComponentType;
 import net.minecraft.component.DataComponentTypes;
 import net.minecraft.component.type.LoreComponent;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NbtOps;
 import net.minecraft.network.packet.s2c.play.PlayerListS2CPacket;
 import net.minecraft.network.packet.s2c.play.PlayerListS2CPacket.Action;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.text.ClickEvent;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Style;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Hand;
+import net.minecraft.util.Identifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,6 +40,10 @@ public class CustomName implements ModInitializer {
 
     public static final String MOD_ID = "eclipsescustomname";
     public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
+
+    public static final Identifier CLEAR_NAME_EVENT = Identifier.of(MOD_ID, "clear_name");
+
+    private static final String NAME_COMMAND_ROOT = "name";
     private static final char FORMATTING_CODE = '&';
     private static final char HEX_CODE = '#';
     private static CustomNameConfig config;
@@ -51,7 +60,7 @@ public class CustomName implements ModInitializer {
         CommandRegistrationCallback.EVENT.register(
                 ((dispatcher, registryAccess, environment) -> {
                     dispatcher.register(
-                            CommandManager.literal("name")
+                            CommandManager.literal(NAME_COMMAND_ROOT)
                                     .then(CommandManager.literal("other")
                                             .requires(permissionCheck("customname.other"))
                                             .then(otherPlayerNameCommand(NameType.PREFIX))
@@ -156,7 +165,7 @@ public class CustomName implements ModInitializer {
     }
 
     private LiteralArgumentBuilder<ServerCommandSource> playerNameCommand(NameType nameType) {
-        return CommandManager.literal(nameType.getName())
+        return CommandManager.literal(nameType.asString())
                 .requires(permissionCheck(nameType.getPermission())
                         .or(config.groups().partOfGroup(nameType))
                         .and(ServerCommandSource::isExecutedByPlayer))
@@ -164,17 +173,17 @@ public class CustomName implements ModInitializer {
                         .suggests(config.groups().createSuggestionsProvider(nameType))
                         .executes(updatePlayerName(nameType, false))
                 )
-                .executes(clearPlayerName(nameType, false));
+                .executes(menuOrClearPlayerName(nameType, false));
     }
 
     private LiteralArgumentBuilder<ServerCommandSource> otherPlayerNameCommand(NameType nameType) {
-        return CommandManager.literal(nameType.getName())
+        return CommandManager.literal(nameType.asString())
                 .requires(permissionCheck(nameType.getPermission()).and(permissionCheck("customname.other")))
                 .then(CommandManager.argument("player", EntityArgumentType.player())
                         .then(CommandManager.argument("name", StringArgumentType.greedyString())
                                 .executes(updatePlayerName(nameType, true))
                         )
-                        .executes(clearPlayerName(nameType, true))
+                        .executes(menuOrClearPlayerName(nameType, true))
                 );
     }
 
@@ -206,19 +215,42 @@ public class CustomName implements ModInitializer {
         };
     }
 
-    private Command<ServerCommandSource> clearPlayerName(NameType nameType, boolean other) {
+    private Command<ServerCommandSource> menuOrClearPlayerName(NameType nameType, boolean other) {
         return context -> {
+            if (!other && config.groups().partOfGroup(nameType).test(context.getSource())) {
+                displayNameMenu(context.getSource(), nameType);
+                return 0;
+            }
+
             ServerPlayerEntity player = other ? EntityArgumentType.getPlayer(context, "player") : context.getSource().getPlayerOrThrow();
 
-            PlayerNameManager.getPlayerNameManager(context.getSource().getServer(), config)
-                    .updatePlayerName(player, null, nameType);
-
-            context.getSource().sendFeedback(
-                    () -> Text.literal(nameType.getDisplayName() + " cleared")
-                            .formatted(Formatting.GOLD), true);
-            updateListName(player);
+            clearPlayerName(context.getSource(), player, nameType);
             return 0;
         };
+    }
+
+    private void displayNameMenu(ServerCommandSource source, NameType nameType) throws CommandSyntaxException {
+        List<MutableText> menu = new ArrayList<>();
+        menu.add(Text.literal("You have the following " + nameType.getPlural() + " available to you:"));
+
+        PlayerNameManager manager = PlayerNameManager.getPlayerNameManager(source.getServer(), config);
+        List<ParsedPlayerName> available = config.groups().validNames(source, nameType);
+        for (ParsedPlayerName name : available) {
+            menu.add(Text.literal("- ")
+                    .append(name.parsed())
+                    .append(name.parsed().equals(manager.getPlayerName(source.getPlayerOrThrow(), nameType)) ? " (current)" : "")
+                    .styled(style -> style.withClickEvent(
+                            new ClickEvent.RunCommand("/" + NAME_COMMAND_ROOT + " " + nameType.asString() + " " + name.raw()))));
+        }
+        menu.add(Text.empty());
+        menu.add(Text.literal("Click a listed " + nameType.asString() + " to apply it"));
+        menu.add(Text.literal("Click here to clear your " + nameType.asString())
+                .styled(style -> style.withClickEvent(
+                        new ClickEvent.Custom(CLEAR_NAME_EVENT, Optional.of(NameType.CODEC.encodeStart(NbtOps.INSTANCE, nameType).getOrThrow())))));
+
+        menu.stream()
+                .map(line -> line.styled(style -> style.withColor(Formatting.GOLD)))
+                .forEach(line -> source.sendFeedback(() -> line, false));
     }
 
     private Command<ServerCommandSource> resetItemComponent(ComponentType<?> component, String name) {
@@ -284,6 +316,16 @@ public class CustomName implements ModInitializer {
             strings.add(currentString.toString());
         }
         return strings;
+    }
+
+    public static void clearPlayerName(ServerCommandSource source, ServerPlayerEntity player, NameType nameType) {
+        if (source == null) {
+            source = player.getCommandSource();
+        }
+        PlayerNameManager.getPlayerNameManager(source.getServer(), config).updatePlayerName(player, null, nameType);
+
+        source.sendFeedback(() -> Text.literal(nameType.getDisplayName() + " cleared").formatted(Formatting.GOLD), true);
+        updateListName(player);
     }
 
     public static Text playerNameArgumentToText(String argument, boolean spaceAllowed) {
