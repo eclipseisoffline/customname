@@ -7,6 +7,7 @@
     "entity.DisplayEntityAccessor",
     "entity.DisplayEntityAccessor$TextDisplayEntityAccessor",
     "entity.EntityAccessor",
+    "entity.EntityMixin",
     "entity.PlayerEntityMixin",
     "entity.ServerPlayerEntityMixin",
     "network.EntityPassengersSetS2CPacketMixin",
