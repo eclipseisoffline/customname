@@ -1,3 +1,1 @@
-- Fixed a bug that caused player names to be visible even when a player is invisible with `display_above_player` set to `true`.
-- Fixed a bug that caused player names to show incorrectly when a player is in a team and `display_above_player` is set to `true`.
-- Backport `display_above_player` to 1.21.1.
+- Fix incompatibility issues with other mods (primarily Pehkui).
