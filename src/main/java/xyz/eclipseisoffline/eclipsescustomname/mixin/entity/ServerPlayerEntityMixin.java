@@ -25,13 +25,14 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import xyz.eclipseisoffline.eclipsescustomname.CustomName;
+import xyz.eclipseisoffline.eclipsescustomname.entity.ServerPlayerEntityOverrides;
 import xyz.eclipseisoffline.eclipsescustomname.network.FakeTextDisplayHolder;
 
 import java.util.List;
 import java.util.UUID;
 
 @Mixin(ServerPlayerEntity.class)
-public abstract class ServerPlayerEntityMixin extends PlayerEntity implements FakeTextDisplayHolder {
+public abstract class ServerPlayerEntityMixin extends PlayerEntity implements FakeTextDisplayHolder, ServerPlayerEntityOverrides {
     @Shadow
     private PlayerInput playerInput;
 
@@ -74,8 +75,7 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntity implements Fa
     }
 
     @Override
-    protected void setFlag(int index, boolean value) {
-        super.setFlag(index, value);
+    public void customName$setFlag(int index, boolean value) {
         // Invisible flag
         if (fakeTextDisplayIds.length > 0 && index == 5) {
             getWorld().getChunkManager().sendToOtherNearbyPlayers(this, new EntityTrackerUpdateS2CPacket(fakeTextDisplayIds[0],
@@ -86,7 +86,7 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntity implements Fa
     }
 
     @Override
-    public void onStartedTrackingBy(ServerPlayerEntity player) {
+    public void customName$onStartedTrackingBy(ServerPlayerEntity player) {
         if (fakeTextDisplayIds.length > 0) {
             player.networkHandler.sendPacket(new EntitySpawnS2CPacket(fakeTextDisplayIds[0], fakeTextDisplayUuids[0], getX(), getY(), getZ(),
                     0.0F, 0.0F, EntityType.TEXT_DISPLAY, 0, Vec3d.ZERO, 0.0));
@@ -110,7 +110,7 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntity implements Fa
     }
 
     @Override
-    public void onStoppedTrackingBy(ServerPlayerEntity player) {
+    public void customName$onStoppedTrackingBy(ServerPlayerEntity player) {
         if (fakeTextDisplayIds.length > 0) {
             player.networkHandler.sendPacket(new EntitiesDestroyS2CPacket(fakeTextDisplayIds));
         }
