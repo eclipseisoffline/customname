@@ -27,7 +27,7 @@ public abstract class ServerCommonNetworkHandlerMixin implements ServerCommonPac
     public void addFakeArmorStandToPassengerPacket(Packet<?> packet, ChannelFutureListener channelFutureListener, CallbackInfo ci) {
         //noinspection ConstantValue
         if (packet instanceof EntityPassengersSetS2CPacket passengersPacket && (Object) this instanceof ServerPlayNetworkHandler playHandler
-                && playHandler.player.getWorld().getEntityById(passengersPacket.getEntityId()) instanceof ServerPlayerEntity player) {
+                && playHandler.player.getEntityWorld().getEntityById(passengersPacket.getEntityId()) instanceof ServerPlayerEntity player) {
             int[] fakeTextDisplays = ((FakeTextDisplayHolder) player).customName$getFakeTextDisplayIds();
             if (fakeTextDisplays.length > 0) {
                 ((CustomEntityPassengersPacket) passengersPacket).customName$addPassengers(fakeTextDisplays);

@@ -37,7 +37,7 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntity implements Fa
     private PlayerInput playerInput;
 
     @Shadow
-    public abstract ServerWorld getWorld();
+    public abstract ServerWorld getEntityWorld();
 
     @Unique
     private int[] fakeTextDisplayIds = new int[0];
@@ -67,9 +67,9 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntity implements Fa
         if (fakeTextDisplayIds.length > 0 && newInput.sneak() != playerInput.sneak()) {
             byte flags = (byte) (newInput.sneak() ? 0 : 1 << 1); // See through blocks when not sneaking
 
-            getWorld().getChunkManager().sendToOtherNearbyPlayers(this, new EntityTrackerUpdateS2CPacket(fakeTextDisplayIds[0],
+            getEntityWorld().getChunkManager().sendToOtherNearbyPlayers(this, new EntityTrackerUpdateS2CPacket(fakeTextDisplayIds[0],
                     List.of(DataTracker.SerializedEntry.of(DisplayEntityAccessor.TextDisplayEntityAccessor.getTextDisplayFlags(), flags))));
-            getWorld().getChunkManager().sendToOtherNearbyPlayers(this, new EntityTrackerUpdateS2CPacket(fakeTextDisplayIds[1],
+            getEntityWorld().getChunkManager().sendToOtherNearbyPlayers(this, new EntityTrackerUpdateS2CPacket(fakeTextDisplayIds[1],
                     List.of(DataTracker.SerializedEntry.of(DisplayEntityAccessor.TextDisplayEntityAccessor.getTextData(), displayNameText(newInput, true)))));
         }
     }
@@ -78,9 +78,9 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntity implements Fa
     public void customName$setFlag(int index, boolean value) {
         // Invisible flag
         if (fakeTextDisplayIds.length > 0 && index == 5) {
-            getWorld().getChunkManager().sendToOtherNearbyPlayers(this, new EntityTrackerUpdateS2CPacket(fakeTextDisplayIds[0],
+            getEntityWorld().getChunkManager().sendToOtherNearbyPlayers(this, new EntityTrackerUpdateS2CPacket(fakeTextDisplayIds[0],
                     List.of(DataTracker.SerializedEntry.of(DisplayEntityAccessor.TextDisplayEntityAccessor.getTextData(), displayNameText(playerInput, false)))));
-            getWorld().getChunkManager().sendToOtherNearbyPlayers(this, new EntityTrackerUpdateS2CPacket(fakeTextDisplayIds[1],
+            getEntityWorld().getChunkManager().sendToOtherNearbyPlayers(this, new EntityTrackerUpdateS2CPacket(fakeTextDisplayIds[1],
                     List.of(DataTracker.SerializedEntry.of(DisplayEntityAccessor.TextDisplayEntityAccessor.getTextData(), displayNameText(playerInput, true)))));
         }
     }
@@ -119,9 +119,9 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntity implements Fa
     @Override
     public void customName$updateName() {
         if (fakeTextDisplayIds.length > 0) {
-            getWorld().getChunkManager().sendToOtherNearbyPlayers(this, new EntityTrackerUpdateS2CPacket(fakeTextDisplayIds[0],
+            getEntityWorld().getChunkManager().sendToOtherNearbyPlayers(this, new EntityTrackerUpdateS2CPacket(fakeTextDisplayIds[0],
                     List.of(DataTracker.SerializedEntry.of(DisplayEntityAccessor.TextDisplayEntityAccessor.getTextData(), displayNameText(playerInput, false)))));
-            getWorld().getChunkManager().sendToOtherNearbyPlayers(this, new EntityTrackerUpdateS2CPacket(fakeTextDisplayIds[1],
+            getEntityWorld().getChunkManager().sendToOtherNearbyPlayers(this, new EntityTrackerUpdateS2CPacket(fakeTextDisplayIds[1],
                     List.of(DataTracker.SerializedEntry.of(DisplayEntityAccessor.TextDisplayEntityAccessor.getTextData(), displayNameText(playerInput, true)))));
         }
     }

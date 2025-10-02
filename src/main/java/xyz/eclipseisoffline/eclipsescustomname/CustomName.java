@@ -445,8 +445,8 @@ public class CustomName implements ModInitializer {
     }
 
     public static void updateListName(ServerPlayerEntity player) {
-        assert player.getServer() != null;
-        player.getServer().getPlayerManager().sendToAll(new PlayerListS2CPacket(Action.UPDATE_DISPLAY_NAME, player));
+        assert player.getEntityWorld() != null;
+        player.getEntityWorld().getServer().getPlayerManager().sendToAll(new PlayerListS2CPacket(Action.UPDATE_DISPLAY_NAME, player));
     }
 
     public static CustomNameConfig getConfig() {
