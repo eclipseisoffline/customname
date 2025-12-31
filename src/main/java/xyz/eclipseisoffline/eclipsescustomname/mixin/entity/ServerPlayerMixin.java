@@ -25,14 +25,14 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import xyz.eclipseisoffline.eclipsescustomname.CustomName;
-import xyz.eclipseisoffline.eclipsescustomname.entity.ServerPlayerEntityOverrides;
+import xyz.eclipseisoffline.eclipsescustomname.entity.ServerPlayerOverrides;
 import xyz.eclipseisoffline.eclipsescustomname.network.FakeTextDisplayHolder;
 
 import java.util.List;
 import java.util.UUID;
 
 @Mixin(ServerPlayer.class)
-public abstract class ServerPlayerEntityMixin extends Player implements FakeTextDisplayHolder, ServerPlayerEntityOverrides {
+public abstract class ServerPlayerMixin extends Player implements FakeTextDisplayHolder, ServerPlayerOverrides {
     @Shadow
     private Input lastClientInput;
 
@@ -44,21 +44,21 @@ public abstract class ServerPlayerEntityMixin extends Player implements FakeText
     @Unique
     private UUID[] fakeTextDisplayUuids = new UUID[0];
 
-    public ServerPlayerEntityMixin(Level world, GameProfile profile) {
-        super(world, profile);
+    public ServerPlayerMixin(Level level, GameProfile profile) {
+        super(level, profile);
     }
 
     @Inject(method = "<init>", at = @At("TAIL"))
-    public void initFakeArmorStand(MinecraftServer server, ServerLevel world, GameProfile profile, ClientInformation clientOptions,
+    public void initFakeArmorStand(MinecraftServer server, ServerLevel level, GameProfile profile, ClientInformation clientInformation,
                                    CallbackInfo callbackInfo) {
         if (CustomName.getConfig().displayAbovePlayer()) {
-            fakeTextDisplayIds = new int[]{EntityAccessor.getCurrentId().incrementAndGet(), EntityAccessor.getCurrentId().incrementAndGet()};
+            fakeTextDisplayIds = new int[]{EntityAccessor.getEntityCounter().incrementAndGet(), EntityAccessor.getEntityCounter().incrementAndGet()};
             fakeTextDisplayUuids = new UUID[]{UUID.randomUUID(), UUID.randomUUID()};
         }
     }
 
     @Inject(method = "getTabListDisplayName", at = @At("HEAD"), cancellable = true)
-    public void getCustomPlayerListName(CallbackInfoReturnable<Component> callbackInfoReturnable) {
+    public void getCustomTabListName(CallbackInfoReturnable<Component> callbackInfoReturnable) {
         callbackInfoReturnable.setReturnValue(getDisplayName());
     }
 
@@ -68,25 +68,25 @@ public abstract class ServerPlayerEntityMixin extends Player implements FakeText
             byte flags = (byte) (newInput.shift() ? 0 : 1 << 1); // See through blocks when not sneaking
 
             level().getChunkSource().sendToTrackingPlayers(this, new ClientboundSetEntityDataPacket(fakeTextDisplayIds[0],
-                    List.of(SynchedEntityData.DataValue.create(DisplayEntityAccessor.TextDisplayEntityAccessor.getTextDisplayFlags(), flags))));
+                    List.of(SynchedEntityData.DataValue.create(DisplayAccessor.TextDisplayAccessor.getDataStyleFlagsId(), flags))));
             level().getChunkSource().sendToTrackingPlayers(this, new ClientboundSetEntityDataPacket(fakeTextDisplayIds[1],
-                    List.of(SynchedEntityData.DataValue.create(DisplayEntityAccessor.TextDisplayEntityAccessor.getTextData(), displayNameText(newInput, true)))));
+                    List.of(SynchedEntityData.DataValue.create(DisplayAccessor.TextDisplayAccessor.getDataTextId(), displayNameText(newInput, true)))));
         }
     }
 
     @Override
-    public void customName$setFlag(int index, boolean value) {
+    public void customName$setSharedFlag(int index, boolean value) {
         // Invisible flag
         if (fakeTextDisplayIds.length > 0 && index == 5) {
             level().getChunkSource().sendToTrackingPlayers(this, new ClientboundSetEntityDataPacket(fakeTextDisplayIds[0],
-                    List.of(SynchedEntityData.DataValue.create(DisplayEntityAccessor.TextDisplayEntityAccessor.getTextData(), displayNameText(lastClientInput, false)))));
+                    List.of(SynchedEntityData.DataValue.create(DisplayAccessor.TextDisplayAccessor.getDataTextId(), displayNameText(lastClientInput, false)))));
             level().getChunkSource().sendToTrackingPlayers(this, new ClientboundSetEntityDataPacket(fakeTextDisplayIds[1],
-                    List.of(SynchedEntityData.DataValue.create(DisplayEntityAccessor.TextDisplayEntityAccessor.getTextData(), displayNameText(lastClientInput, true)))));
+                    List.of(SynchedEntityData.DataValue.create(DisplayAccessor.TextDisplayAccessor.getDataTextId(), displayNameText(lastClientInput, true)))));
         }
     }
 
     @Override
-    public void customName$onStartedTrackingBy(ServerPlayer player) {
+    public void customName$startSeenByPlayer(ServerPlayer player) {
         if (fakeTextDisplayIds.length > 0) {
             player.connection.send(new ClientboundAddEntityPacket(fakeTextDisplayIds[0], fakeTextDisplayUuids[0], getX(), getY(), getZ(),
                     0.0F, 0.0F, EntityType.TEXT_DISPLAY, 0, Vec3.ZERO, 0.0));
@@ -95,22 +95,22 @@ public abstract class ServerPlayerEntityMixin extends Player implements FakeText
             player.connection.send(new ClientboundSetPassengersPacket(this)); // Text display passenger is added through mixin in network handler to increase compatibility with other mods
 
             player.connection.send(new ClientboundSetEntityDataPacket(fakeTextDisplayIds[0],
-                    List.of(SynchedEntityData.DataValue.create(DisplayEntityAccessor.TextDisplayEntityAccessor.getTextData(), displayNameText(lastClientInput, false)),
-                            SynchedEntityData.DataValue.create(DisplayEntityAccessor.getTranslationData(), new Vector3f(0.0F, 0.2F, 0.0F)),
-                            SynchedEntityData.DataValue.create(DisplayEntityAccessor.getBillboardData(), (byte) 3), // Centre billboard
-                            SynchedEntityData.DataValue.create(DisplayEntityAccessor.TextDisplayEntityAccessor.getTextOpacityData(), (byte) 127),
-                            SynchedEntityData.DataValue.create(DisplayEntityAccessor.TextDisplayEntityAccessor.getTextDisplayFlags(), lastClientInput.shift() ? (byte) 0 : (byte) (1 << 1))))); // See through blocks when not sneaking
+                    List.of(SynchedEntityData.DataValue.create(DisplayAccessor.TextDisplayAccessor.getDataTextId(), displayNameText(lastClientInput, false)),
+                            SynchedEntityData.DataValue.create(DisplayAccessor.getDataTranslationId(), new Vector3f(0.0F, 0.2F, 0.0F)),
+                            SynchedEntityData.DataValue.create(DisplayAccessor.getDataBillboardRenderConstraintsId(), (byte) 3), // Centre billboard
+                            SynchedEntityData.DataValue.create(DisplayAccessor.TextDisplayAccessor.getDataTextOpacityId(), (byte) 127),
+                            SynchedEntityData.DataValue.create(DisplayAccessor.TextDisplayAccessor.getDataStyleFlagsId(), lastClientInput.shift() ? (byte) 0 : (byte) (1 << 1))))); // See through blocks when not sneaking
 
             player.connection.send(new ClientboundSetEntityDataPacket(fakeTextDisplayIds[1],
-                    List.of(SynchedEntityData.DataValue.create(DisplayEntityAccessor.TextDisplayEntityAccessor.getTextData(), displayNameText(lastClientInput, true)),
-                            SynchedEntityData.DataValue.create(DisplayEntityAccessor.getTranslationData(), new Vector3f(0.0F, 0.2F, 0.0F)),
-                            SynchedEntityData.DataValue.create(DisplayEntityAccessor.getBillboardData(), (byte) 3), // Centre billboard
-                            SynchedEntityData.DataValue.create(DisplayEntityAccessor.TextDisplayEntityAccessor.getBackgroundData(), 0))));
+                    List.of(SynchedEntityData.DataValue.create(DisplayAccessor.TextDisplayAccessor.getDataTextId(), displayNameText(lastClientInput, true)),
+                            SynchedEntityData.DataValue.create(DisplayAccessor.getDataTranslationId(), new Vector3f(0.0F, 0.2F, 0.0F)),
+                            SynchedEntityData.DataValue.create(DisplayAccessor.getDataBillboardRenderConstraintsId(), (byte) 3), // Centre billboard
+                            SynchedEntityData.DataValue.create(DisplayAccessor.TextDisplayAccessor.getDataBackgroundColorId(), 0))));
         }
     }
 
     @Override
-    public void customName$onStoppedTrackingBy(ServerPlayer player) {
+    public void customName$stopSeenByPlayer(ServerPlayer player) {
         if (fakeTextDisplayIds.length > 0) {
             player.connection.send(new ClientboundRemoveEntitiesPacket(fakeTextDisplayIds));
         }
@@ -120,9 +120,9 @@ public abstract class ServerPlayerEntityMixin extends Player implements FakeText
     public void customName$updateName() {
         if (fakeTextDisplayIds.length > 0) {
             level().getChunkSource().sendToTrackingPlayers(this, new ClientboundSetEntityDataPacket(fakeTextDisplayIds[0],
-                    List.of(SynchedEntityData.DataValue.create(DisplayEntityAccessor.TextDisplayEntityAccessor.getTextData(), displayNameText(lastClientInput, false)))));
+                    List.of(SynchedEntityData.DataValue.create(DisplayAccessor.TextDisplayAccessor.getDataTextId(), displayNameText(lastClientInput, false)))));
             level().getChunkSource().sendToTrackingPlayers(this, new ClientboundSetEntityDataPacket(fakeTextDisplayIds[1],
-                    List.of(SynchedEntityData.DataValue.create(DisplayEntityAccessor.TextDisplayEntityAccessor.getTextData(), displayNameText(lastClientInput, true)))));
+                    List.of(SynchedEntityData.DataValue.create(DisplayAccessor.TextDisplayAccessor.getDataTextId(), displayNameText(lastClientInput, true)))));
         }
     }
 

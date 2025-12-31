@@ -4,15 +4,15 @@
   "package": "xyz.eclipseisoffline.eclipsescustomname.mixin",
   "compatibilityLevel": "JAVA_17",
   "mixins": [
-    "entity.DisplayEntityAccessor",
-    "entity.DisplayEntityAccessor$TextDisplayEntityAccessor",
+    "entity.DisplayAccessor",
+    "entity.DisplayAccessor$TextDisplayAccessor",
     "entity.EntityAccessor",
     "entity.EntityMixin",
-    "entity.PlayerEntityMixin",
-    "entity.ServerPlayerEntityMixin",
-    "network.EntityPassengersSetS2CPacketMixin",
-    "network.SerializableTeamMixin",
-    "network.ServerCommonNetworkHandlerMixin"
+    "entity.PlayerMixin",
+    "entity.ServerPlayerMixin",
+    "network.ClientboundSetPassengersPacketMixin",
+    "network.ClientboundSetPlayerTeamPacketParametersMixin",
+    "network.ServerCommonPacketListenerImplMixin"
   ],
   "client": [],
   "injectors": {

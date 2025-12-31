@@ -18,13 +18,11 @@ import xyz.eclipseisoffline.eclipsescustomname.NameType;
 import xyz.eclipseisoffline.eclipsescustomname.network.CustomEntityPassengersPacket;
 import xyz.eclipseisoffline.eclipsescustomname.network.FakeTextDisplayHolder;
 
-import java.util.Optional;
-
 @Mixin(ServerCommonPacketListenerImpl.class)
-public abstract class ServerCommonNetworkHandlerMixin implements ServerCommonPacketListener {
+public abstract class ServerCommonPacketListenerImplMixin implements ServerCommonPacketListener {
 
     @Inject(method = "send(Lnet/minecraft/network/protocol/Packet;Lio/netty/channel/ChannelFutureListener;)V", at = @At("HEAD"))
-    public void addFakeArmorStandToPassengerPacket(Packet<?> packet, ChannelFutureListener channelFutureListener, CallbackInfo ci) {
+    public void addFakeArmorStandToPassengerPacket(Packet<?> packet, ChannelFutureListener channelFutureListener, CallbackInfo callbackInfo) {
         //noinspection ConstantValue
         if (packet instanceof ClientboundSetPassengersPacket passengersPacket && (Object) this instanceof ServerGamePacketListenerImpl playHandler
                 && playHandler.player.level().getEntity(passengersPacket.getVehicle()) instanceof ServerPlayer player) {

@@ -7,7 +7,7 @@ import net.minecraft.network.chat.Component;
 public record ParsedPlayerName(String raw, Component parsed) {
     public static final Codec<ParsedPlayerName> CODEC = Codec.STRING.comapFlatMap(raw -> {
         try {
-            return DataResult.success(new ParsedPlayerName(raw, CustomName.argumentToText(raw, true, false, false)));
+            return DataResult.success(new ParsedPlayerName(raw, CustomName.argumentToComponent(raw, true, false, false)));
         } catch (IllegalArgumentException exception) {
             return DataResult.error(() -> "Failed to parse player name: " + exception.getMessage());
         }

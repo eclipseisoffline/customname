@@ -10,7 +10,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import xyz.eclipseisoffline.eclipsescustomname.network.CustomEntityPassengersPacket;
 
 @Mixin(ClientboundSetPassengersPacket.class)
-public abstract class EntityPassengersSetS2CPacketMixin implements Packet<ClientGamePacketListener>, CustomEntityPassengersPacket {
+public abstract class ClientboundSetPassengersPacketMixin implements Packet<ClientGamePacketListener>, CustomEntityPassengersPacket {
 
     @Shadow
     @Final

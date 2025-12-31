@@ -10,9 +10,9 @@ import org.spongepowered.asm.mixin.injection.At;
 import xyz.eclipseisoffline.eclipsescustomname.CustomName;
 
 @Mixin(ClientboundSetPlayerTeamPacket.Parameters.class)
-public abstract class SerializableTeamMixin {
+public abstract class ClientboundSetPlayerTeamPacketParametersMixin {
 
-    @WrapOperation(method = "<init>(Lnet/minecraft/world/scores/PlayerTeam;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/scores/PlayerTeam;getNameTagVisibilityRule()Lnet/minecraft/world/scores/Team$Visibility;"))
+    @WrapOperation(method = "<init>(Lnet/minecraft/world/scores/PlayerTeam;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/scores/PlayerTeam;getNameTagVisibility()Lnet/minecraft/world/scores/Team$Visibility;"))
     public Team.Visibility returnNeverIfUsingCustomNames(PlayerTeam instance, Operation<Team.Visibility> original) {
         if (CustomName.getConfig().displayAbovePlayer()) {
             return Team.Visibility.NEVER;

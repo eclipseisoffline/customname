@@ -60,7 +60,7 @@ public class CustomName implements ModInitializer {
         config = CustomNameConfig.readOrCreate();
 
         CommandRegistrationCallback.EVENT.register(
-                ((dispatcher, registryAccess, environment) -> {
+                ((dispatcher, buildContext, selection) -> {
                     dispatcher.register(
                             Commands.literal(NAME_COMMAND_ROOT)
                                     .then(Commands.literal("other")
@@ -77,66 +77,54 @@ public class CustomName implements ModInitializer {
                     dispatcher.register(
                             Commands.literal("itemname")
                                     .requires(permissionCheck("customname.itemname").and(CommandSourceStack::isPlayer).and(source -> config.formattingEnabled()))
-                                    .then(Commands.argument("name",
-                                                    StringArgumentType.greedyString())
+                                    .then(Commands.argument("name", StringArgumentType.greedyString())
                                             .executes(context -> {
-                                                ServerPlayer player = context.getSource()
-                                                        .getPlayerOrException();
+                                                ServerPlayer player = context.getSource().getPlayerOrException();
 
-                                                ItemStack holding = player.getItemInHand(
-                                                        InteractionHand.MAIN_HAND);
-
+                                                ItemStack holding = player.getItemInHand(InteractionHand.MAIN_HAND);
                                                 if (holding.isEmpty()) {
-                                                    throw new SimpleCommandExceptionType(
-                                                            Component.nullToEmpty("Must hold an item to name")).create();
+                                                    throw new SimpleCommandExceptionType(Component.literal("Must hold an item to name")).create();
                                                 }
 
                                                 Component argument;
                                                 try {
-                                                    argument = argumentToText(StringArgumentType.getString(context, "name"),
+                                                    argument = argumentToComponent(StringArgumentType.getString(context, "name"),
                                                             true, true, true);
                                                 } catch (IllegalArgumentException exception) {
-                                                    throw new SimpleCommandExceptionType(Component.nullToEmpty(exception.getMessage())).create();
+                                                    throw new SimpleCommandExceptionType(Component.literal(exception.getMessage())).create();
                                                 }
                                                 if (ChatFormatting.stripFormatting(argument.getString()).isEmpty()) {
-                                                    throw new SimpleCommandExceptionType(
-                                                            Component.nullToEmpty("Invalid item name")).create();
+                                                    throw new SimpleCommandExceptionType(Component.literal("Invalid item name")).create();
                                                 }
 
                                                 holding.set(DataComponents.CUSTOM_NAME, argument);
                                                 player.setItemInHand(InteractionHand.MAIN_HAND, holding);
-                                                context.getSource().sendSuccess(
-                                                        () -> Component.literal("Set item name to ")
-                                                                .append(argument), true);
+                                                context.getSource().sendSuccess(() -> Component.literal("Set item name to ").append(argument), true);
 
                                                 return 0;
                                             })
                                     )
-                                    .executes(resetItemComponent(DataComponents.CUSTOM_NAME, "item name"))
+                                    .executes(resetItemDataComponent(DataComponents.CUSTOM_NAME, "item name"))
                     );
 
                     dispatcher.register(
                             Commands.literal("itemlore")
                                     .requires(permissionCheck("customname.itemlore").and(CommandSourceStack::isPlayer).and(source -> config.formattingEnabled()))
-                                    .then(Commands.argument("lore",
-                                                    StringArgumentType.greedyString())
+                                    .then(Commands.argument("lore", StringArgumentType.greedyString())
                                             .executes(context -> {
-                                                ServerPlayer player = context.getSource()
-                                                        .getPlayerOrException();
+                                                ServerPlayer player = context.getSource().getPlayerOrException();
 
-                                                ItemStack holding = player.getItemInHand(
-                                                        InteractionHand.MAIN_HAND);
+                                                ItemStack holding = player.getItemInHand(InteractionHand.MAIN_HAND);
 
                                                 if (holding.isEmpty()) {
-                                                    throw new SimpleCommandExceptionType(
-                                                            Component.nullToEmpty("Must hold an item to set lore of")).create();
+                                                    throw new SimpleCommandExceptionType(Component.nullToEmpty("Must hold an item to set lore of")).create();
                                                 }
 
                                                 List<Component> arguments = new ArrayList<>();
                                                 try {
                                                     List<String> lines = splitArgument(StringArgumentType.getString(context, "lore"));
                                                     for (String line : lines) {
-                                                        Component argument = argumentToText(line, true, true, true);
+                                                        Component argument = argumentToComponent(line, true, true, true);
 
                                                         if (ChatFormatting.stripFormatting(argument.getString()).isEmpty()) {
                                                             throw new SimpleCommandExceptionType(Component.nullToEmpty("Invalid item lore")).create();
@@ -149,19 +137,18 @@ public class CustomName implements ModInitializer {
 
                                                 holding.set(DataComponents.LORE, new ItemLore(arguments));
                                                 player.setItemInHand(InteractionHand.MAIN_HAND, holding);
-                                                context.getSource().sendSuccess(
-                                                        () -> {
-                                                            if (arguments.size() == 1) {
-                                                                return Component.literal("Set item lore to ").append(arguments.getFirst());
-                                                            } else {
-                                                                return Component.literal("Updated item lore");
-                                                            }
-                                                        }, true);
+                                                context.getSource().sendSuccess(() -> {
+                                                    if (arguments.size() == 1) {
+                                                        return Component.literal("Set item lore to ").append(arguments.getFirst());
+                                                    } else {
+                                                        return Component.literal("Updated item lore");
+                                                    }
+                                                }, true);
 
                                                 return 0;
                                             })
                                     )
-                                    .executes(resetItemComponent(DataComponents.LORE, "item lore"))
+                                    .executes(resetItemDataComponent(DataComponents.LORE, "item lore"))
                     );
                 }));
     }
@@ -194,9 +181,9 @@ public class CustomName implements ModInitializer {
             ServerPlayer player = other ? EntityArgument.getPlayer(context, "player") : context.getSource().getPlayerOrException();
             Component name;
 
-            boolean bypassRestrictions = config.operatorsBypassRestrictions() && Permissions.check(context.getSource(), "customname.bypass_restrictions", 2);
+            boolean bypassRestrictions = config.operatorsBypassRestrictions() && Permissions.check(context.getSource(), "customname.bypass_restrictions", PermissionLevel.GAMEMASTERS);
             try {
-                name = playerNameArgumentToText(StringArgumentType.getString(context, "name"), bypassRestrictions);
+                name = playerNameArgumentToComponent(StringArgumentType.getString(context, "name"), bypassRestrictions);
             } catch (IllegalArgumentException exception) {
                 throw new SimpleCommandExceptionType(Component.nullToEmpty(exception.getMessage())).create();
             }
@@ -225,7 +212,6 @@ public class CustomName implements ModInitializer {
             }
 
             ServerPlayer player = other ? EntityArgument.getPlayer(context, "player") : context.getSource().getPlayerOrException();
-
             clearPlayerName(context.getSource(), player, nameType);
             return 0;
         };
@@ -255,14 +241,13 @@ public class CustomName implements ModInitializer {
                 .forEach(line -> source.sendSuccess(() -> line, false));
     }
 
-    private Command<CommandSourceStack> resetItemComponent(DataComponentType<?> component, String name) {
+    private Command<CommandSourceStack> resetItemDataComponent(DataComponentType<?> component, String name) {
         return context -> {
             ServerPlayer player = context.getSource().getPlayerOrException();
             ItemStack holding = player.getItemInHand(InteractionHand.MAIN_HAND);
 
             if (holding.isEmpty()) {
-                throw new SimpleCommandExceptionType(
-                        Component.nullToEmpty("Must hold an item to reset " + name + " of")).create();
+                throw new SimpleCommandExceptionType(Component.nullToEmpty("Must hold an item to reset " + name + " of")).create();
             }
 
             holding.remove(component);
@@ -278,7 +263,6 @@ public class CustomName implements ModInitializer {
         }
 
         String name = ChatFormatting.stripFormatting(argument.getString());
-        assert name != null;
         return name.isEmpty() || (!bypassRestrictions && (config.nameBlacklisted(name) || name.length() > config.maxNameLength()));
     }
 
@@ -330,12 +314,12 @@ public class CustomName implements ModInitializer {
         updateListName(player);
     }
 
-    public static Component playerNameArgumentToText(String argument, boolean spaceAllowed) {
-        return argumentToText(argument, config.formattingEnabled(), spaceAllowed, false);
+    public static Component playerNameArgumentToComponent(String argument, boolean spaceAllowed) {
+        return argumentToComponent(argument, config.formattingEnabled(), spaceAllowed, false);
     }
 
-    public static Component argumentToText(String argument, boolean formattingEnabled,
-            boolean spaceAllowed, boolean forceItalics) {
+    public static Component argumentToComponent(String argument, boolean formattingEnabled,
+                                                boolean spaceAllowed, boolean forceItalics) {
         if (!spaceAllowed) {
             argument = argument.split(" ")[0];
         }
@@ -446,7 +430,6 @@ public class CustomName implements ModInitializer {
     }
 
     public static void updateListName(ServerPlayer player) {
-        assert player.level() != null;
         player.level().getServer().getPlayerList().broadcastAll(new ClientboundPlayerInfoUpdatePacket(Action.UPDATE_DISPLAY_NAME, player));
     }
 

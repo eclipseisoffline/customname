@@ -16,17 +16,17 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 
 @Mixin(Player.class)
-public abstract class PlayerEntityMixin extends LivingEntity {
+public abstract class PlayerMixin extends LivingEntity {
 
-    protected PlayerEntityMixin(EntityType<? extends LivingEntity> entityType,
-            Level world) {
-        super(entityType, world);
+    protected PlayerMixin(EntityType<? extends LivingEntity> type,
+                          Level level) {
+        super(type, level);
     }
 
     @WrapOperation(method = "getDisplayName", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Player;getName()Lnet/minecraft/network/chat/Component;"))
     public Component setCustomName(Player player, Operation<Component> original) {
         if (player instanceof ServerPlayer serverPlayer) {
-            return PlayerNameManager.getPlayerNameManager(Objects.requireNonNull(serverPlayer.level().getServer()), CustomName.getConfig()).getFullPlayerName(serverPlayer);
+            return PlayerNameManager.getPlayerNameManager(serverPlayer.level().getServer(), CustomName.getConfig()).getFullPlayerName(serverPlayer);
         }
         return original.call(player);
     }

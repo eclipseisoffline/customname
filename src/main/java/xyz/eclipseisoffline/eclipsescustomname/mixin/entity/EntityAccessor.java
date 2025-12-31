@@ -10,7 +10,7 @@ import net.minecraft.world.entity.Entity;
 public interface EntityAccessor {
 
     @Accessor("ENTITY_COUNTER")
-    static AtomicInteger getCurrentId() {
+    static AtomicInteger getEntityCounter() {
         throw new AssertionError();
     }
 }

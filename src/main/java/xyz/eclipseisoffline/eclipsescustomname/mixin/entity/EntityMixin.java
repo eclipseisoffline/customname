@@ -6,29 +6,29 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import xyz.eclipseisoffline.eclipsescustomname.entity.ServerPlayerEntityOverrides;
+import xyz.eclipseisoffline.eclipsescustomname.entity.ServerPlayerOverrides;
 
 @Mixin(Entity.class)
 public abstract class EntityMixin {
 
     @Inject(method = "setSharedFlag", at = @At("TAIL"))
     public void runOverrides(int index, boolean value, CallbackInfo callbackInfo) {
-        if (this instanceof ServerPlayerEntityOverrides overrides) {
-            overrides.customName$setFlag(index, value);
+        if (this instanceof ServerPlayerOverrides overrides) {
+            overrides.customName$setSharedFlag(index, value);
         }
     }
 
     @Inject(method = "startSeenByPlayer", at = @At("HEAD"))
     public void runStartTrackOverrides(ServerPlayer player, CallbackInfo callbackInfo) {
-        if (this instanceof ServerPlayerEntityOverrides overrides) {
-            overrides.customName$onStartedTrackingBy(player);
+        if (this instanceof ServerPlayerOverrides overrides) {
+            overrides.customName$startSeenByPlayer(player);
         }
     }
 
     @Inject(method = "stopSeenByPlayer", at = @At("HEAD"))
     public void runStopTrackOverrides(ServerPlayer player, CallbackInfo callbackInfo) {
-        if (this instanceof ServerPlayerEntityOverrides overrides) {
-            overrides.customName$onStoppedTrackingBy(player);
+        if (this instanceof ServerPlayerOverrides overrides) {
+            overrides.customName$stopSeenByPlayer(player);
         }
     }
 }

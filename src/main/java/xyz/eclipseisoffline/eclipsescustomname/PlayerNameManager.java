@@ -5,6 +5,7 @@ import com.google.gson.JsonParser;
 import java.io.StringReader;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 
 import com.google.gson.Strictness;
@@ -27,13 +28,12 @@ import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.RegistryOps;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.level.Level;
 import net.minecraft.world.level.saveddata.SavedData;
 import net.minecraft.world.level.saveddata.SavedDataType;
 import xyz.eclipseisoffline.eclipsescustomname.network.FakeTextDisplayHolder;
 
 public class PlayerNameManager extends SavedData {
-    private static final Codec<Component> LEGACY_TEXT_CODEC = new Codec<>() {
+    private static final Codec<Component> LEGACY_COMPONENT_CODEC = new Codec<>() {
         @Override
         public <T> DataResult<Pair<Component, T>> decode(DynamicOps<T> ops, T input) {
             if (ops instanceof RegistryOps<?> registryOps) {
@@ -54,9 +54,9 @@ public class PlayerNameManager extends SavedData {
     };
     // Order is important here: we should attempt LEGACY_TEXT_CODEC here, and not go straight to trying to parse a text component from NBT
     // The latter would just put the entire legacy JSON string as a literal component
-    private static final Codec<Component> NAME_TEXT_CODEC = Codec.either(LEGACY_TEXT_CODEC, ComponentSerialization.CODEC).xmap(Either::unwrap, Either::right);
+    private static final Codec<Component> NAME_COMPONENT_CODEC = Codec.either(LEGACY_COMPONENT_CODEC, ComponentSerialization.CODEC).xmap(Either::unwrap, Either::right);
 
-    private static final Codec<Map<UUID, Component>> NAME_MAP_CODEC = Codec.unboundedMap(UUIDUtil.STRING_CODEC, NAME_TEXT_CODEC);
+    private static final Codec<Map<UUID, Component>> NAME_MAP_CODEC = Codec.unboundedMap(UUIDUtil.STRING_CODEC, NAME_COMPONENT_CODEC);
 
     private final CustomNameConfig config;
     private final Map<UUID, Component> playerPrefixes = new HashMap<>();
@@ -149,18 +149,14 @@ public class PlayerNameManager extends SavedData {
         MutableComponent name = Component.literal("");
         if (permissionsPrefix != null) {
             name.append(CustomName
-                    .argumentToText(permissionsPrefix, config.formattingEnabled(), true, false));
+                    .argumentToComponent(permissionsPrefix, config.formattingEnabled(), true, false));
             name.append(" ");
         }
         if (prefix != null) {
             name.append(prefix);
             name.append(" ");
         }
-        if (nickname != null) {
-            name.append(nickname);
-        } else {
-            name.append(player.getName());
-        }
+        name.append(Objects.requireNonNullElseGet(nickname, player::getName));
         if (suffix != null) {
             name.append(" ");
             name.append(suffix);
@@ -168,7 +164,7 @@ public class PlayerNameManager extends SavedData {
         if (permissionsSuffix != null) {
             name.append(" ");
             name.append(CustomName
-                    .argumentToText(permissionsSuffix, config.formattingEnabled(), true, false));
+                    .argumentToComponent(permissionsSuffix, config.formattingEnabled(), true, false));
         }
 
         fullPlayerNames.put(player.getUUID(), name);
@@ -187,6 +183,6 @@ public class PlayerNameManager extends SavedData {
     }
 
     public static PlayerNameManager getPlayerNameManager(MinecraftServer server, CustomNameConfig config) {
-        return server.getLevel(Level.OVERWORLD).getDataStorage().computeIfAbsent(type(server, config));
+        return server.overworld().getDataStorage().computeIfAbsent(type(server, config));
     }
 }
