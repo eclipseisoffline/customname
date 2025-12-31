@@ -2,9 +2,9 @@ package xyz.eclipseisoffline.eclipsescustomname;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
-import net.minecraft.text.Text;
+import net.minecraft.network.chat.Component;
 
-public record ParsedPlayerName(String raw, Text parsed) {
+public record ParsedPlayerName(String raw, Component parsed) {
     public static final Codec<ParsedPlayerName> CODEC = Codec.STRING.comapFlatMap(raw -> {
         try {
             return DataResult.success(new ParsedPlayerName(raw, CustomName.argumentToText(raw, true, false, false)));

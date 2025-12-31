@@ -20,52 +20,52 @@ import net.luckperms.api.LuckPerms;
 import net.luckperms.api.LuckPermsProvider;
 import net.luckperms.api.event.user.UserDataRecalculateEvent;
 import net.luckperms.api.model.user.User;
-import net.minecraft.registry.RegistryOps;
+import net.minecraft.core.UUIDUtil;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.ComponentSerialization;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.resources.RegistryOps;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.MutableText;
-import net.minecraft.text.Text;
-import net.minecraft.text.TextCodecs;
-import net.minecraft.util.Uuids;
-import net.minecraft.world.PersistentState;
-import net.minecraft.world.PersistentStateType;
-import net.minecraft.world.World;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.saveddata.SavedData;
+import net.minecraft.world.level.saveddata.SavedDataType;
 import xyz.eclipseisoffline.eclipsescustomname.network.FakeTextDisplayHolder;
 
-public class PlayerNameManager extends PersistentState {
-    private static final Codec<Text> LEGACY_TEXT_CODEC = new Codec<>() {
+public class PlayerNameManager extends SavedData {
+    private static final Codec<Component> LEGACY_TEXT_CODEC = new Codec<>() {
         @Override
-        public <T> DataResult<Pair<Text, T>> decode(DynamicOps<T> ops, T input) {
+        public <T> DataResult<Pair<Component, T>> decode(DynamicOps<T> ops, T input) {
             if (ops instanceof RegistryOps<?> registryOps) {
                 return ops.getStringValue(input).map(string -> {
                     JsonReader reader = new JsonReader(new StringReader(string));
                     reader.setStrictness(Strictness.LENIENT);
                     return JsonParser.parseReader(reader);
-                }).flatMap(element -> TextCodecs.CODEC.parse(registryOps.withDelegate(JsonOps.INSTANCE), element))
+                }).flatMap(element -> ComponentSerialization.CODEC.parse(registryOps.withParent(JsonOps.INSTANCE), element))
                         .map(text -> Pair.of(text, ops.empty()));
             }
             return DataResult.error(() -> "Decoding text requires registry ops");
         }
 
         @Override
-        public <T> DataResult<T> encode(Text input, DynamicOps<T> ops, T prefix) {
+        public <T> DataResult<T> encode(Component input, DynamicOps<T> ops, T prefix) {
             return DataResult.error(() -> "Unsupported operation; legacy codec should not be used to encode");
         }
     };
     // Order is important here: we should attempt LEGACY_TEXT_CODEC here, and not go straight to trying to parse a text component from NBT
     // The latter would just put the entire legacy JSON string as a literal component
-    private static final Codec<Text> NAME_TEXT_CODEC = Codec.either(LEGACY_TEXT_CODEC, TextCodecs.CODEC).xmap(Either::unwrap, Either::right);
+    private static final Codec<Component> NAME_TEXT_CODEC = Codec.either(LEGACY_TEXT_CODEC, ComponentSerialization.CODEC).xmap(Either::unwrap, Either::right);
 
-    private static final Codec<Map<UUID, Text>> NAME_MAP_CODEC = Codec.unboundedMap(Uuids.STRING_CODEC, NAME_TEXT_CODEC);
+    private static final Codec<Map<UUID, Component>> NAME_MAP_CODEC = Codec.unboundedMap(UUIDUtil.STRING_CODEC, NAME_TEXT_CODEC);
 
     private final CustomNameConfig config;
-    private final Map<UUID, Text> playerPrefixes = new HashMap<>();
-    private final Map<UUID, Text> playerSuffixes = new HashMap<>();
-    private final Map<UUID, Text> playerNicknames = new HashMap<>();
-    private final Map<UUID, Text> fullPlayerNames = new HashMap<>();
+    private final Map<UUID, Component> playerPrefixes = new HashMap<>();
+    private final Map<UUID, Component> playerSuffixes = new HashMap<>();
+    private final Map<UUID, Component> playerNicknames = new HashMap<>();
+    private final Map<UUID, Component> fullPlayerNames = new HashMap<>();
     private final LuckPerms luckPerms;
 
-    private PlayerNameManager(MinecraftServer server, CustomNameConfig config, Map<UUID, Text> prefixes, Map<UUID, Text> nicknames, Map<UUID, Text> suffixes) {
+    private PlayerNameManager(MinecraftServer server, CustomNameConfig config, Map<UUID, Component> prefixes, Map<UUID, Component> nicknames, Map<UUID, Component> suffixes) {
         this.config = config;
         this.playerPrefixes.putAll(prefixes);
         this.playerNicknames.putAll(nicknames);
@@ -79,7 +79,7 @@ public class PlayerNameManager extends PersistentState {
                 UUID uuid = event.getUser().getUniqueId();
                 fullPlayerNames.remove(uuid);
 
-                ServerPlayerEntity player = server.getPlayerManager().getPlayer(uuid);
+                ServerPlayer player = server.getPlayerList().getPlayer(uuid);
                 if (player != null) {
                     CustomName.updateListName(player);
                 }
@@ -93,60 +93,60 @@ public class PlayerNameManager extends PersistentState {
         CustomName.LOGGER.info("Creating player name mappings - LuckPerms {}!", luckPermsState);
     }
 
-    public void updatePlayerName(ServerPlayerEntity player, Text name, NameType type) {
+    public void updatePlayerName(ServerPlayer player, Component name, NameType type) {
         if (name == null) {
             switch (type) {
-                case PREFIX -> playerPrefixes.remove(player.getUuid());
-                case SUFFIX -> playerSuffixes.remove(player.getUuid());
-                case NICKNAME -> playerNicknames.remove(player.getUuid());
+                case PREFIX -> playerPrefixes.remove(player.getUUID());
+                case SUFFIX -> playerSuffixes.remove(player.getUUID());
+                case NICKNAME -> playerNicknames.remove(player.getUUID());
             }
         } else {
             switch (type) {
-                case PREFIX -> playerPrefixes.put(player.getUuid(), name);
-                case SUFFIX -> playerSuffixes.put(player.getUuid(), name);
-                case NICKNAME -> playerNicknames.put(player.getUuid(), name);
+                case PREFIX -> playerPrefixes.put(player.getUUID(), name);
+                case SUFFIX -> playerSuffixes.put(player.getUUID(), name);
+                case NICKNAME -> playerNicknames.put(player.getUUID(), name);
             }
         }
         markDirty(player);
     }
 
-    public Text getFullPlayerName(ServerPlayerEntity player) {
-        if (!fullPlayerNames.containsKey(player.getUuid())) {
+    public Component getFullPlayerName(ServerPlayer player) {
+        if (!fullPlayerNames.containsKey(player.getUUID())) {
             updateFullPlayerName(player);
         }
-        return fullPlayerNames.get(player.getUuid());
+        return fullPlayerNames.get(player.getUUID());
     }
 
-    public Text getPlayerName(ServerPlayerEntity player, NameType nameType) {
+    public Component getPlayerName(ServerPlayer player, NameType nameType) {
         return switch (nameType) {
-            case PREFIX -> playerPrefixes.get(player.getUuid());
-            case SUFFIX -> playerSuffixes.get(player.getUuid());
-            case NICKNAME -> playerNicknames.get(player.getUuid());
+            case PREFIX -> playerPrefixes.get(player.getUUID());
+            case SUFFIX -> playerSuffixes.get(player.getUUID());
+            case NICKNAME -> playerNicknames.get(player.getUUID());
         };
     }
 
-    private void markDirty(ServerPlayerEntity player) {
+    private void markDirty(ServerPlayer player) {
         updateFullPlayerName(player);
-        markDirty();
+        setDirty();
     }
 
-    private void updateFullPlayerName(ServerPlayerEntity player) {
+    private void updateFullPlayerName(ServerPlayer player) {
         String permissionsPrefix = null;
         String permissionsSuffix = null;
 
         if (luckPerms != null) {
-            User luckPermsUser = luckPerms.getUserManager().getUser(player.getUuid());
+            User luckPermsUser = luckPerms.getUserManager().getUser(player.getUUID());
             if (luckPermsUser != null) {
                 permissionsPrefix = luckPermsUser.getCachedData().getMetaData().getPrefix();
                 permissionsSuffix = luckPermsUser.getCachedData().getMetaData().getSuffix();
             }
         }
 
-        Text prefix = playerPrefixes.get(player.getUuid());
-        Text suffix = playerSuffixes.get(player.getUuid());
-        Text nickname = playerNicknames.get(player.getUuid());
+        Component prefix = playerPrefixes.get(player.getUUID());
+        Component suffix = playerSuffixes.get(player.getUUID());
+        Component nickname = playerNicknames.get(player.getUUID());
 
-        MutableText name = Text.literal("");
+        MutableComponent name = Component.literal("");
         if (permissionsPrefix != null) {
             name.append(CustomName
                     .argumentToText(permissionsPrefix, config.formattingEnabled(), true, false));
@@ -171,11 +171,11 @@ public class PlayerNameManager extends PersistentState {
                     .argumentToText(permissionsSuffix, config.formattingEnabled(), true, false));
         }
 
-        fullPlayerNames.put(player.getUuid(), name);
+        fullPlayerNames.put(player.getUUID(), name);
         ((FakeTextDisplayHolder) player).customName$updateName();
     }
 
-    private static PersistentStateType<PlayerNameManager> type(MinecraftServer server, CustomNameConfig config) {
+    private static SavedDataType<PlayerNameManager> type(MinecraftServer server, CustomNameConfig config) {
         Codec<PlayerNameManager> codec = RecordCodecBuilder.create(instance ->
                 instance.group(
                         NAME_MAP_CODEC.fieldOf("prefixes").forGetter(manager -> manager.playerPrefixes),
@@ -183,10 +183,10 @@ public class PlayerNameManager extends PersistentState {
                         NAME_MAP_CODEC.fieldOf("suffixes").forGetter(manager -> manager.playerSuffixes)
                 ).apply(instance, (prefixes, nicknames, suffixes) -> new PlayerNameManager(server, config, prefixes, nicknames, suffixes))
         );
-        return new PersistentStateType<>(CustomName.MOD_ID, () -> new PlayerNameManager(server, config, Map.of(), Map.of(), Map.of()), codec, null);
+        return new SavedDataType<>(CustomName.MOD_ID, () -> new PlayerNameManager(server, config, Map.of(), Map.of(), Map.of()), codec, null);
     }
 
     public static PlayerNameManager getPlayerNameManager(MinecraftServer server, CustomNameConfig config) {
-        return server.getWorld(World.OVERWORLD).getPersistentStateManager().getOrCreate(type(server, config));
+        return server.getLevel(Level.OVERWORLD).getDataStorage().computeIfAbsent(type(server, config));
     }
 }

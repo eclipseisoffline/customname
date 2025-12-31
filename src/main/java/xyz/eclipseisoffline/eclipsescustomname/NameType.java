@@ -1,14 +1,14 @@
 package xyz.eclipseisoffline.eclipsescustomname;
 
 import com.mojang.serialization.Codec;
-import net.minecraft.util.StringIdentifiable;
+import net.minecraft.util.StringRepresentable;
 
-public enum NameType implements StringIdentifiable {
+public enum NameType implements StringRepresentable {
     PREFIX("prefix", "prefixes", "prefix", "Prefix"),
     SUFFIX("suffix", "suffixes", "suffix", "Suffix"),
     NICKNAME("nickname", "nicknames", "nick", "Nickname");
 
-    public static final Codec<NameType> CODEC = StringIdentifiable.createCodec(NameType::values);
+    public static final Codec<NameType> CODEC = StringRepresentable.fromEnum(NameType::values);
     
     private final String name;
     private final String plural;
@@ -23,7 +23,7 @@ public enum NameType implements StringIdentifiable {
     }
 
     @Override
-    public String asString() {
+    public String getSerializedName() {
         return name;
     }
 

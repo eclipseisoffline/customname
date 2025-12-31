@@ -29,10 +29,10 @@ import java.util.stream.Collectors;
 
 import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.command.CommandSource;
-import net.minecraft.server.command.ServerCommandSource;
-import net.minecraft.text.Text;
-import net.minecraft.util.dynamic.Codecs;
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.commands.SharedSuggestionProvider;
+import net.minecraft.network.chat.Component;
+import net.minecraft.util.ExtraCodecs;
 
 public record CustomNameConfig(boolean formattingEnabled, boolean requirePermissions, List<Pattern> blacklistedNames,
                                int maxNameLength, boolean operatorsBypassRestrictions, boolean displayAbovePlayer,
@@ -46,7 +46,7 @@ public record CustomNameConfig(boolean formattingEnabled, boolean requirePermiss
                     fallbackIfMissing(Codec.BOOL, "enable_formatting", true).forGetter(CustomNameConfig::formattingEnabled),
                     fallbackIfMissing(Codec.BOOL, "require_permissions", true).forGetter(CustomNameConfig::requirePermissions),
                     fallbackIfMissing(PATTERN_CODEC.listOf(), "blacklisted_names", List.of()).forGetter(CustomNameConfig::blacklistedNames),
-                    fallbackIfMissing(Codecs.rangedInt(1, MAX_MAX_LENGTH), "max_name_length", 16).forGetter(CustomNameConfig::maxNameLength),
+                    fallbackIfMissing(ExtraCodecs.intRange(1, MAX_MAX_LENGTH), "max_name_length", 16).forGetter(CustomNameConfig::maxNameLength),
                     fallbackIfMissing(Codec.BOOL, "operators_bypass_restrictions", false).forGetter(CustomNameConfig::operatorsBypassRestrictions),
                     fallbackIfMissing(Codec.BOOL, "display_above_player", false).forGetter(CustomNameConfig::displayAbovePlayer),
                     fallbackIfMissing(CustomNameGroups.CODEC, "name_groups", CustomNameGroups.EMPTY).forGetter(CustomNameConfig::groups)
@@ -128,7 +128,7 @@ public record CustomNameConfig(boolean formattingEnabled, boolean requirePermiss
                     .collect(Collectors.toMap(Pair::getFirst, Pair::getSecond)));
         }
 
-        public List<ParsedPlayerName> validNames(ServerCommandSource source, NameType nameType) {
+        public List<ParsedPlayerName> validNames(CommandSourceStack source, NameType nameType) {
             Map<String, List<ParsedPlayerName>> groups = nameGroups.get(nameType);
             if (groups == null) {
                 return List.of();
@@ -144,27 +144,27 @@ public record CustomNameConfig(boolean formattingEnabled, boolean requirePermiss
             return List.copyOf(names);
         }
 
-        public boolean validName(ServerCommandSource source, NameType nameType, Text name) {
+        public boolean validName(CommandSourceStack source, NameType nameType, Component name) {
             return validNames(source, nameType).stream()
                     .map(ParsedPlayerName::parsed)
                     .anyMatch(Predicate.isEqual(name));
         }
 
-        public Predicate<ServerCommandSource> partOfGroup(NameType type) {
+        public Predicate<CommandSourceStack> partOfGroup(NameType type) {
             return groupPermissionNodes.getOrDefault(type, List.of()).stream()
                     .map(Permissions::require)
                     .reduce(Predicate::or)
                     .orElse(source -> false);
         }
 
-        public SuggestionProvider<ServerCommandSource> createSuggestionsProvider(NameType nameType) {
+        public SuggestionProvider<CommandSourceStack> createSuggestionsProvider(NameType nameType) {
             return (context, builder) ->
-                    CommandSource.suggestMatching(validNames(context.getSource(), nameType).stream()
+                    SharedSuggestionProvider.suggest(validNames(context.getSource(), nameType).stream()
                             .map(ParsedPlayerName::raw), builder);
         }
 
         private static String getGroupPermissionNode(NameType nameType, String group) {
-            return CustomNameUtil.getPermissionNode("group." + nameType.asString() + "." + group);
+            return CustomNameUtil.getPermissionNode("group." + nameType.getSerializedName() + "." + group);
         }
 
         static {
