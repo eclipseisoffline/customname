@@ -32,7 +32,7 @@ public enum NameType implements StringRepresentable {
     }
 
     public String getPermission() {
-        return CustomNameUtil.getPermissionNode(permission);
+        return permission;
     }
 
     public String getDisplayName() {

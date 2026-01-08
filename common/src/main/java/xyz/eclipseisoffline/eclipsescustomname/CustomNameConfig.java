@@ -27,8 +27,6 @@ import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import me.lucko.fabric.api.permissions.v0.Permissions;
-import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.network.chat.Component;
@@ -66,8 +64,8 @@ public record CustomNameConfig(boolean formattingEnabled, boolean requirePermiss
         return false;
     }
 
-    public void write() {
-        Path configPath = FabricLoader.getInstance().getConfigDir().resolve(CONFIG_FILE);
+    public void write(Path configDir) {
+        Path configPath = configDir.resolve(CONFIG_FILE);
         DataResult<JsonElement> encoded = CODEC.encodeStart(JsonOps.INSTANCE, this);
 
         Gson gson = new GsonBuilder()
@@ -82,12 +80,12 @@ public record CustomNameConfig(boolean formattingEnabled, boolean requirePermiss
         }
     }
 
-    public static CustomNameConfig readOrCreate() {
-        Path configPath = FabricLoader.getInstance().getConfigDir().resolve(CONFIG_FILE);
+    public static CustomNameConfig readOrCreate(Path configDir) {
+        Path configPath = configDir.resolve(CONFIG_FILE);
 
         if (!Files.exists(configPath)) {
             CustomName.LOGGER.info("No config file found, generating a default one");
-            DEFAULT.write();
+            DEFAULT.write(configDir);
             return DEFAULT;
         }
 
@@ -95,7 +93,7 @@ public record CustomNameConfig(boolean formattingEnabled, boolean requirePermiss
             JsonElement configJson = JsonParser.parseReader(reader);
             DataResult<Pair<CustomNameConfig, JsonElement>> readConfig = CODEC.decode(JsonOps.INSTANCE, configJson);
             CustomNameConfig config = readConfig.getOrThrow(s -> new IllegalStateException("Codec failed parsing config file! " + s)).getFirst();
-            config.write();
+            config.write(configDir);
             return config;
         } catch (IOException | IllegalStateException exception) {
             CustomName.LOGGER.error("Failed reading config file! Using default config, please fix the errors listed to let the config load correctly!", exception);
@@ -136,7 +134,7 @@ public record CustomNameConfig(boolean formattingEnabled, boolean requirePermiss
 
             List<ParsedPlayerName> names = new ArrayList<>();
             for (String group : groups.keySet()) {
-                if (CustomName.checkPermission(source, getGroupPermissionNode(nameType, group))) {
+                if (CustomName.getPermissions().checkPermission(source, getGroupPermissionNode(nameType, group))) {
                     names.addAll(groups.get(group));
                 }
             }
@@ -152,9 +150,9 @@ public record CustomNameConfig(boolean formattingEnabled, boolean requirePermiss
 
         public Predicate<CommandSourceStack> partOfGroup(NameType type) {
             return groupPermissionNodes.getOrDefault(type, List.of()).stream()
-                    .map(Permissions::require)
+                    .<Predicate<CommandSourceStack>>map(permission -> source -> CustomName.getPermissions().hasPermission(source, permission))
                     .reduce(Predicate::or)
-                    .orElse(source -> false);
+                    .orElse(_ -> false);
         }
 
         public SuggestionProvider<CommandSourceStack> createSuggestionsProvider(NameType nameType) {
@@ -164,7 +162,7 @@ public record CustomNameConfig(boolean formattingEnabled, boolean requirePermiss
         }
 
         private static String getGroupPermissionNode(NameType nameType, String group) {
-            return CustomNameUtil.getPermissionNode("group." + nameType.getSerializedName() + "." + group);
+            return "group." + nameType.getSerializedName() + "." + group;
         }
 
         static {

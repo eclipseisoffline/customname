@@ -1,6 +1,7 @@
 package xyz.eclipseisoffline.eclipsescustomname;
 
 import com.mojang.brigadier.Command;
+import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
@@ -10,11 +11,7 @@ import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.function.Predicate;
-import me.lucko.fabric.api.permissions.v0.Permissions;
-import net.fabricmc.api.ModInitializer;
-import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
-import net.fabricmc.loader.api.FabricLoader;
+
 import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
@@ -30,7 +27,6 @@ import net.minecraft.network.protocol.game.ClientboundPlayerInfoUpdatePacket;
 import net.minecraft.network.protocol.game.ClientboundPlayerInfoUpdatePacket.Action;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.server.permissions.PermissionLevel;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.ItemLore;
@@ -38,7 +34,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 // TODO clean this up, commands to different class
-public class CustomName implements ModInitializer {
+public abstract class CustomName {
 
     public static final String MOD_ID = "eclipsescustomname";
     public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
@@ -48,110 +44,115 @@ public class CustomName implements ModInitializer {
     private static final String NAME_COMMAND_ROOT = "name";
     private static final char FORMATTING_CODE = '&';
     private static final char HEX_CODE = '#';
-    private static CustomNameConfig config;
 
-    @Override
-    public void onInitialize() {
-        String modVersion = String.valueOf(
-                FabricLoader.getInstance().getModContainer(MOD_ID).orElseThrow().getMetadata()
-                        .getVersion());
-        LOGGER.info("Custom Names {} initialising", modVersion);
+    private static boolean initialized = false;
+    private static CustomNameConfig config;
+    private static CustomNamePermissions permissions;
+
+    public void initialize() {
+        if (initialized) {
+            throw new IllegalStateException("Tried to initialise CustomName twice!");
+        }
+        initialized = true;
+
+        LOGGER.info("Custom Names {} initialising", getVersion());
         LOGGER.info("Reading config");
         config = CustomNameConfig.readOrCreate();
-
-        CommandRegistrationCallback.EVENT.register(
-                ((dispatcher, buildContext, selection) -> {
-                    dispatcher.register(
-                            Commands.literal(NAME_COMMAND_ROOT)
-                                    .then(Commands.literal("other")
-                                            .requires(permissionCheck("customname.other"))
-                                            .then(otherPlayerNameCommand(NameType.PREFIX))
-                                            .then(otherPlayerNameCommand(NameType.SUFFIX))
-                                            .then(otherPlayerNameCommand(NameType.NICKNAME))
-                                    )
-                                    .then(playerNameCommand(NameType.PREFIX))
-                                    .then(playerNameCommand(NameType.SUFFIX))
-                                    .then(playerNameCommand(NameType.NICKNAME))
-                    );
-
-                    dispatcher.register(
-                            Commands.literal("itemname")
-                                    .requires(permissionCheck("customname.itemname").and(CommandSourceStack::isPlayer).and(source -> config.formattingEnabled()))
-                                    .then(Commands.argument("name", StringArgumentType.greedyString())
-                                            .executes(context -> {
-                                                ServerPlayer player = context.getSource().getPlayerOrException();
-
-                                                ItemStack holding = player.getItemInHand(InteractionHand.MAIN_HAND);
-                                                if (holding.isEmpty()) {
-                                                    throw new SimpleCommandExceptionType(Component.literal("Must hold an item to name")).create();
-                                                }
-
-                                                Component argument;
-                                                try {
-                                                    argument = argumentToComponent(StringArgumentType.getString(context, "name"),
-                                                            true, true, true);
-                                                } catch (IllegalArgumentException exception) {
-                                                    throw new SimpleCommandExceptionType(Component.literal(exception.getMessage())).create();
-                                                }
-                                                if (ChatFormatting.stripFormatting(argument.getString()).isEmpty()) {
-                                                    throw new SimpleCommandExceptionType(Component.literal("Invalid item name")).create();
-                                                }
-
-                                                holding.set(DataComponents.CUSTOM_NAME, argument);
-                                                player.setItemInHand(InteractionHand.MAIN_HAND, holding);
-                                                context.getSource().sendSuccess(() -> Component.literal("Set item name to ").append(argument), true);
-
-                                                return 0;
-                                            })
-                                    )
-                                    .executes(resetItemDataComponent(DataComponents.CUSTOM_NAME, "item name"))
-                    );
-
-                    dispatcher.register(
-                            Commands.literal("itemlore")
-                                    .requires(permissionCheck("customname.itemlore").and(CommandSourceStack::isPlayer).and(source -> config.formattingEnabled()))
-                                    .then(Commands.argument("lore", StringArgumentType.greedyString())
-                                            .executes(context -> {
-                                                ServerPlayer player = context.getSource().getPlayerOrException();
-
-                                                ItemStack holding = player.getItemInHand(InteractionHand.MAIN_HAND);
-
-                                                if (holding.isEmpty()) {
-                                                    throw new SimpleCommandExceptionType(Component.nullToEmpty("Must hold an item to set lore of")).create();
-                                                }
-
-                                                List<Component> arguments = new ArrayList<>();
-                                                try {
-                                                    List<String> lines = splitArgument(StringArgumentType.getString(context, "lore"));
-                                                    for (String line : lines) {
-                                                        Component argument = argumentToComponent(line, true, true, true);
-
-                                                        if (ChatFormatting.stripFormatting(argument.getString()).isEmpty()) {
-                                                            throw new SimpleCommandExceptionType(Component.nullToEmpty("Invalid item lore")).create();
-                                                        }
-                                                        arguments.add(argument);
-                                                    }
-                                                } catch (IllegalArgumentException exception) {
-                                                    throw new SimpleCommandExceptionType(Component.nullToEmpty(exception.getMessage())).create();
-                                                }
-
-                                                holding.set(DataComponents.LORE, new ItemLore(arguments));
-                                                player.setItemInHand(InteractionHand.MAIN_HAND, holding);
-                                                context.getSource().sendSuccess(() -> {
-                                                    if (arguments.size() == 1) {
-                                                        return Component.literal("Set item lore to ").append(arguments.getFirst());
-                                                    } else {
-                                                        return Component.literal("Updated item lore");
-                                                    }
-                                                }, true);
-
-                                                return 0;
-                                            })
-                                    )
-                                    .executes(resetItemDataComponent(DataComponents.LORE, "item lore"))
-                    );
-                }));
     }
+
+    protected void registerCommands(CommandDispatcher<CommandSourceStack> dispatcher) {
+        dispatcher.register(
+                Commands.literal(NAME_COMMAND_ROOT)
+                        .then(Commands.literal("other")
+                                .requires(permissionCheck("customname.other"))
+                                .then(otherPlayerNameCommand(NameType.PREFIX))
+                                .then(otherPlayerNameCommand(NameType.SUFFIX))
+                                .then(otherPlayerNameCommand(NameType.NICKNAME))
+                        )
+                        .then(playerNameCommand(NameType.PREFIX))
+                        .then(playerNameCommand(NameType.SUFFIX))
+                        .then(playerNameCommand(NameType.NICKNAME))
+        );
+
+        dispatcher.register(
+                Commands.literal("itemname")
+                        .requires(permissionCheck("customname.itemname").and(CommandSourceStack::isPlayer).and(source -> config.formattingEnabled()))
+                        .then(Commands.argument("name", StringArgumentType.greedyString())
+                                .executes(context -> {
+                                    ServerPlayer player = context.getSource().getPlayerOrException();
+
+                                    ItemStack holding = player.getItemInHand(InteractionHand.MAIN_HAND);
+                                    if (holding.isEmpty()) {
+                                        throw new SimpleCommandExceptionType(Component.literal("Must hold an item to name")).create();
+                                    }
+
+                                    Component argument;
+                                    try {
+                                        argument = argumentToComponent(StringArgumentType.getString(context, "name"),
+                                                true, true, true);
+                                    } catch (IllegalArgumentException exception) {
+                                        throw new SimpleCommandExceptionType(Component.literal(exception.getMessage())).create();
+                                    }
+                                    if (ChatFormatting.stripFormatting(argument.getString()).isEmpty()) {
+                                        throw new SimpleCommandExceptionType(Component.literal("Invalid item name")).create();
+                                    }
+
+                                    holding.set(DataComponents.CUSTOM_NAME, argument);
+                                    player.setItemInHand(InteractionHand.MAIN_HAND, holding);
+                                    context.getSource().sendSuccess(() -> Component.literal("Set item name to ").append(argument), true);
+
+                                    return 0;
+                                })
+                        )
+                        .executes(resetItemDataComponent(DataComponents.CUSTOM_NAME, "item name"))
+        );
+
+        dispatcher.register(
+                Commands.literal("itemlore")
+                        .requires(permissionCheck("customname.itemlore").and(CommandSourceStack::isPlayer).and(source -> config.formattingEnabled()))
+                        .then(Commands.argument("lore", StringArgumentType.greedyString())
+                                .executes(context -> {
+                                    ServerPlayer player = context.getSource().getPlayerOrException();
+
+                                    ItemStack holding = player.getItemInHand(InteractionHand.MAIN_HAND);
+
+                                    if (holding.isEmpty()) {
+                                        throw new SimpleCommandExceptionType(Component.nullToEmpty("Must hold an item to set lore of")).create();
+                                    }
+
+                                    List<Component> arguments = new ArrayList<>();
+                                    try {
+                                        List<String> lines = splitArgument(StringArgumentType.getString(context, "lore"));
+                                        for (String line : lines) {
+                                            Component argument = argumentToComponent(line, true, true, true);
+
+                                            if (ChatFormatting.stripFormatting(argument.getString()).isEmpty()) {
+                                                throw new SimpleCommandExceptionType(Component.nullToEmpty("Invalid item lore")).create();
+                                            }
+                                            arguments.add(argument);
+                                        }
+                                    } catch (IllegalArgumentException exception) {
+                                        throw new SimpleCommandExceptionType(Component.nullToEmpty(exception.getMessage())).create();
+                                    }
+
+                                    holding.set(DataComponents.LORE, new ItemLore(arguments));
+                                    player.setItemInHand(InteractionHand.MAIN_HAND, holding);
+                                    context.getSource().sendSuccess(() -> {
+                                        if (arguments.size() == 1) {
+                                            return Component.literal("Set item lore to ").append(arguments.getFirst());
+                                        } else {
+                                            return Component.literal("Updated item lore");
+                                        }
+                                    }, true);
+
+                                    return 0;
+                                })
+                        )
+                        .executes(resetItemDataComponent(DataComponents.LORE, "item lore"))
+        );
+    }
+
+    protected abstract String getVersion();
 
     private LiteralArgumentBuilder<CommandSourceStack> playerNameCommand(NameType nameType) {
         return Commands.literal(nameType.getSerializedName())
@@ -181,7 +182,7 @@ public class CustomName implements ModInitializer {
             ServerPlayer player = other ? EntityArgument.getPlayer(context, "player") : context.getSource().getPlayerOrException();
             Component name;
 
-            boolean bypassRestrictions = config.operatorsBypassRestrictions() && Permissions.check(context.getSource(), "customname.bypass_restrictions", PermissionLevel.GAMEMASTERS);
+            boolean bypassRestrictions = config.operatorsBypassRestrictions() && checkPermission(context.getSource(), "customname.bypass_restrictions");
             try {
                 name = playerNameArgumentToComponent(StringArgumentType.getString(context, "name"), bypassRestrictions);
             } catch (IllegalArgumentException exception) {
@@ -415,25 +416,15 @@ public class CustomName implements ModInitializer {
         return Component.nullToEmpty(argument);
     }
 
-    public static Predicate<CommandSourceStack> permissionCheck(String permission) {
-        if (config.requirePermissions()) {
-            return Permissions.require(permission, PermissionLevel.GAMEMASTERS);
-        }
-        return (source) -> true;
-    }
-
-    public static boolean checkPermission(CommandSourceStack source, String permission) {
-        if (config.requirePermissions()) {
-            return Permissions.check(source, permission, PermissionLevel.GAMEMASTERS);
-        }
-        return true;
-    }
-
     public static void updateListName(ServerPlayer player) {
         player.level().getServer().getPlayerList().broadcastAll(new ClientboundPlayerInfoUpdatePacket(Action.UPDATE_DISPLAY_NAME, player));
     }
 
     public static CustomNameConfig getConfig() {
         return config;
+    }
+
+    public static CustomNamePermissions getPermissions() {
+        return permissions;
     }
 }
