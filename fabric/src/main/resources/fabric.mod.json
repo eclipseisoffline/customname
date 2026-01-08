@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
-  "id": "eclipsescustomname",
+  "id": "${mod_id}",
   "version": "${version}",
-  "name": "Custom Name",
-  "description": "Adds a /name command to customise the appearance of your name, and a /itemname command to give your items colourful names",
+  "name": "${mod_name}",
+  "description": "${mod_description}",
   "authors": [
     {
       "name": "eclipseisoffline",
@@ -13,29 +13,29 @@
     }
   ],
   "contact": {
-    "website": "https://modrinth.com/mod/fabric-custom-names",
-    "issues": "https://github.com/eclipseisoffline/customname/issues",
-    "sources": "https://github.com/eclipseisoffline/customname"
+    "website": "https://modrinth.com/mod/${modrinth_id}",
+    "issues": "https://github.com/eclipseisoffline/${github_repository}/issues",
+    "sources": "https://github.com/eclipseisoffline/${github_repository}"
   },
   "license": "LGPL-3.0-only",
   "icon": "assets/eclipsescustomname/icon.png",
   "environment": "*",
   "entrypoints": {
     "main": [
-      "xyz.eclipseisoffline.eclipsescustomname.CustomName"
+      "xyz.eclipseisoffline.eclipsescustomname.fabric.CustomNameFabric"
     ]
   },
   "mixins": [
     "eclipsescustomname.mixins.json"
   ],
   "depends": {
-    "fabricloader": ">=${loader_version}",
-    "fabric": "*",
-    "minecraft": "${supported_versions}",
-    "fabric-permissions-api-v0": "*"
+    "fabricloader": ">=${fabric_loader_version}",
+    "fabric-api": ">=${fabric_api_version}",
+    "minecraft": "${minecraft_version}"
   },
   "suggests": {
-    "luckperms": "*"
+    "luckperms": "*",
+    "fabric-permissions-api-v0": "*"
   },
   "custom": {
     "modmenu": {

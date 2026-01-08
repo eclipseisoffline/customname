@@ -1,13 +1,13 @@
 [versions]
 multimod = "0.2.4"
 
-minecraft = "26.1-snapshot-1"
-minecraft-release = "26.1-snapshot-1"
+minecraft = "26.1-snapshot-2"
+minecraft-release = "26.1-snapshot-2"
 
-fabric-api = "0.140.3+26.1"
+fabric-api = "0.141.2+26.1"
 fabric-permissions-api = "0.6.1"
 
-neoforge = "26.1.0.0-alpha.3+snapshot-1"
+neoforge = "26.1.0.0-alpha.5+snapshot-2"
 
 luckperms = "5.4"
 

@@ -123,14 +123,14 @@ For example, consider this name groups config:
       "&f&l[&9VIP&f&l]",
       "&f&l[&aVIP&f&l]",
       "&f&l[&bVIP&f&l]",
-      "&f&l[&cVIP&f&l]",
+      "&f&l[&cVIP&f&l]"
     ],
     "legendary": [
       "&f&l[&7Legendary&f&l]",
       "&f&l[&9Legendary&f&l]",
       "&f&l[&aLegendary&f&l]",
       "&f&l[&bLegendary&f&l]",
-      "&f&l[&cLegendary&f&l]",
+      "&f&l[&cLegendary&f&l]"
     ]
   },
   "nickname": {},

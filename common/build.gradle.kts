@@ -5,5 +5,5 @@ plugins {
 multimod.common()
 
 dependencies {
-    add("compileOnly", libs.luckperms)
+    add("compileOnlyApi", libs.luckperms)
 }

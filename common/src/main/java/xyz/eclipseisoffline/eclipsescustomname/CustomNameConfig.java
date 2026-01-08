@@ -150,7 +150,7 @@ public record CustomNameConfig(boolean formattingEnabled, boolean requirePermiss
 
         public Predicate<CommandSourceStack> partOfGroup(NameType type) {
             return groupPermissionNodes.getOrDefault(type, List.of()).stream()
-                    .<Predicate<CommandSourceStack>>map(permission -> source -> CustomName.getPermissions().hasPermission(source, permission))
+                    .<Predicate<CommandSourceStack>>map(permission -> source -> CustomName.getPermissions().checkPermission(source, permission))
                     .reduce(Predicate::or)
                     .orElse(_ -> false);
         }
