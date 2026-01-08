@@ -1,0 +1,28 @@
+license="LGPL-3.0-only"
+issueTrackerURL="https://github.com/${github_repository}/issues"
+
+[[mods]]
+modId="${mod_id}"
+version="${version}"
+displayName="${mod_name}"
+displayURL="https://modrinth.com/mod/${modrinth_id}"
+logoFile="assets/${mod_id}/icon.png"
+authors="eclipseisoffline"
+description='''${mod_description}'''
+
+[[mixins]]
+config="eclipsescustomname.mixins.json"
+
+[[dependencies]]
+    modId="neoforge"
+    type="required"
+    versionRange="${neoforge_version}"
+    ordering="NONE"
+    side="BOTH"
+
+[[dependencies]]
+    modId="minecraft"
+    type="required"
+    versionRange="${neoforge_minecraft_version}"
+    ordering="NONE"
+    side="BOTH"
