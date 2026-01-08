@@ -1,9 +1,11 @@
 package xyz.eclipseisoffline.eclipsescustomname;
 
-public class CustomNameUtil {
-    private static final String ROOT_PERMISSION_NODE = "customname";
+import net.minecraft.network.protocol.game.ClientboundPlayerInfoUpdatePacket;
+import net.minecraft.server.level.ServerPlayer;
 
-    public static String getPermissionNode(String node) {
-        return ROOT_PERMISSION_NODE + "." + node;
+public class CustomNameUtil {
+
+    public static void updateListName(ServerPlayer player) {
+        player.level().getServer().getPlayerList().broadcastAll(new ClientboundPlayerInfoUpdatePacket(ClientboundPlayerInfoUpdatePacket.Action.UPDATE_DISPLAY_NAME, player));
     }
 }

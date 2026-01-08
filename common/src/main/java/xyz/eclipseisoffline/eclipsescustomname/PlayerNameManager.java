@@ -21,6 +21,7 @@ import net.luckperms.api.LuckPerms;
 import net.luckperms.api.LuckPermsProvider;
 import net.luckperms.api.event.user.UserDataRecalculateEvent;
 import net.luckperms.api.model.user.User;
+import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.UUIDUtil;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.ComponentSerialization;
@@ -182,7 +183,11 @@ public class PlayerNameManager extends SavedData {
         return new SavedDataType<>(CustomName.MOD_ID, () -> new PlayerNameManager(server, config, Map.of(), Map.of(), Map.of()), codec, null);
     }
 
-    public static PlayerNameManager getPlayerNameManager(MinecraftServer server, CustomNameConfig config) {
-        return server.overworld().getDataStorage().computeIfAbsent(type(server, config));
+    public static PlayerNameManager getPlayerNameManager(MinecraftServer server) {
+        return server.overworld().getDataStorage().computeIfAbsent(type(server, CustomName.getConfig()));
+    }
+
+    public static PlayerNameManager getPlayerNameManager(CommandSourceStack source) {
+        return getPlayerNameManager(source.getServer());
     }
 }

@@ -1,6 +1,7 @@
 package xyz.eclipseisoffline.eclipsescustomname;
 
 import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.server.permissions.Permission;
 import net.minecraft.server.permissions.PermissionLevel;
 
 import java.util.function.Predicate;
@@ -20,7 +21,9 @@ public interface CustomNamePermissions {
         return true;
     }
 
-    default boolean hasPermission(CommandSourceStack source, String permission, PermissionLevel fallback);
+    default boolean hasPermission(CommandSourceStack source, String permission, PermissionLevel fallback) {
+        return hasPermission(source, permission) || source.permissions().hasPermission(new Permission.HasCommandLevel(fallback));
+    }
 
     boolean hasPermission(CommandSourceStack source, String permission);
 
