@@ -1,1 +1,2 @@
-- Update to 1.21.11.
+- Update to Minecraft 26.1-snapshot-2.
+- Port to NeoForge.
