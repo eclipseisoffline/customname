@@ -26,7 +26,7 @@ public abstract class PlayerMixin extends LivingEntity {
     @WrapOperation(method = "getDisplayName", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Player;getName()Lnet/minecraft/network/chat/Component;"))
     public Component setCustomName(Player player, Operation<Component> original) {
         if (player instanceof ServerPlayer serverPlayer) {
-            return PlayerNameManager.getPlayerNameManager(serverPlayer.level().getServer(), CustomName.getConfig()).getFullPlayerName(serverPlayer);
+            return PlayerNameManager.getPlayerNameManager(serverPlayer.level().getServer()).getFullPlayerName(serverPlayer);
         }
         return original.call(player);
     }

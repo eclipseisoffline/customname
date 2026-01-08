@@ -16,13 +16,11 @@ import net.minecraft.nbt.NbtOps;
 import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.network.chat.Style;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.ItemLore;
-import org.jspecify.annotations.Nullable;
 
 import java.io.IOException;
 import java.io.StringReader;
@@ -35,14 +33,12 @@ public class CustomNameCommands {
     public static final Identifier CLEAR_NAME_EVENT = Identifier.fromNamespaceAndPath(CustomName.MOD_ID, "clear_name");
 
     private static final String NAME_COMMAND_ROOT = "name";
-    private static final char FORMATTING_CODE = '&';
-    private static final char HEX_CODE = '#';
 
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
         dispatcher.register(
                 Commands.literal(NAME_COMMAND_ROOT)
                         .then(Commands.literal("other")
-                                .requires(permissionCheck("customname.other"))
+                                .requires(permissionCheck("other"))
                                 .then(otherPlayerNameCommand(NameType.PREFIX))
                                 .then(otherPlayerNameCommand(NameType.SUFFIX))
                                 .then(otherPlayerNameCommand(NameType.NICKNAME))
@@ -54,7 +50,7 @@ public class CustomNameCommands {
 
         dispatcher.register(
                 Commands.literal("itemname")
-                        .requires(permissionCheck("customname.itemname")
+                        .requires(permissionCheck("itemname")
                                 .and(CommandSourceStack::isPlayer)
                                 .and(_ -> CustomName.getConfig().formattingEnabled()))
                         .then(Commands.argument("name", StringArgumentType.greedyString())
@@ -68,7 +64,7 @@ public class CustomNameCommands {
 
                                     Component argument;
                                     try {
-                                        argument = argumentToComponent(StringArgumentType.getString(context, "name"),
+                                        argument = CustomNameUtil.nameArgumentToComponent(StringArgumentType.getString(context, "name"),
                                                 true, true, true);
                                     } catch (IllegalArgumentException exception) {
                                         throw new SimpleCommandExceptionType(Component.literal(exception.getMessage())).create();
@@ -89,7 +85,7 @@ public class CustomNameCommands {
 
         dispatcher.register(
                 Commands.literal("itemlore")
-                        .requires(permissionCheck("customname.itemlore")
+                        .requires(permissionCheck("itemlore")
                                 .and(CommandSourceStack::isPlayer)
                                 .and(_ -> CustomName.getConfig().formattingEnabled()))
                         .then(Commands.argument("lore", StringArgumentType.greedyString())
@@ -106,7 +102,7 @@ public class CustomNameCommands {
                                     try {
                                         List<String> lines = splitArgument(StringArgumentType.getString(context, "lore"));
                                         for (String line : lines) {
-                                            Component argument = argumentToComponent(line, true, true, true);
+                                            Component argument = CustomNameUtil.nameArgumentToComponent(line, true, true, true);
 
                                             if (ChatFormatting.stripFormatting(argument.getString()).isEmpty()) {
                                                 throw new SimpleCommandExceptionType(Component.nullToEmpty("Invalid item lore")).create();
@@ -148,7 +144,7 @@ public class CustomNameCommands {
 
     private static LiteralArgumentBuilder<CommandSourceStack> otherPlayerNameCommand(NameType nameType) {
         return Commands.literal(nameType.getSerializedName())
-                .requires(permissionCheck(nameType.getPermission()).and(permissionCheck("customname.other")))
+                .requires(permissionCheck(nameType.getPermission()).and(permissionCheck("other")))
                 .then(Commands.argument("player", EntityArgument.player())
                         .then(Commands.argument("name", StringArgumentType.greedyString())
                                 .executes(updatePlayerName(nameType, true))
@@ -164,7 +160,7 @@ public class CustomNameCommands {
 
             boolean bypassRestrictions = CustomName.getConfig().operatorsBypassRestrictions() && checkPermission(context.getSource(), "bypass_restrictions");
             try {
-                name = playerNameArgumentToComponent(StringArgumentType.getString(context, "name"), bypassRestrictions);
+                name = CustomNameUtil.playerNameArgumentToComponent(StringArgumentType.getString(context, "name"), bypassRestrictions);
             } catch (IllegalArgumentException exception) {
                 throw new SimpleCommandExceptionType(Component.nullToEmpty(exception.getMessage())).create();
             }
@@ -192,7 +188,7 @@ public class CustomNameCommands {
             }
 
             ServerPlayer player = other ? EntityArgument.getPlayer(context, "player") : context.getSource().getPlayerOrException();
-            clearPlayerName(context.getSource(), player, nameType);
+            CustomNameUtil.clearPlayerName(context.getSource(), player, nameType);
             return 0;
         };
     }
@@ -290,116 +286,5 @@ public class CustomNameCommands {
 
     private static boolean checkPermission(CommandSourceStack source, String permission) {
         return CustomName.getPermissions().checkPermission(source, permission);
-    }
-
-    public static void clearPlayerName(@Nullable CommandSourceStack source, ServerPlayer player, NameType nameType) {
-        if (source == null) {
-            source = player.createCommandSourceStack();
-        }
-        PlayerNameManager.getPlayerNameManager(source).updatePlayerName(player, null, nameType);
-
-        source.sendSuccess(() -> Component.literal(nameType.getDisplayName() + " cleared").withStyle(ChatFormatting.GOLD), true);
-        CustomNameUtil.updateListName(player);
-    }
-
-    public static Component playerNameArgumentToComponent(String argument, boolean spaceAllowed) {
-        return argumentToComponent(argument, CustomName.getConfig().formattingEnabled(), spaceAllowed, false);
-    }
-
-    public static Component argumentToComponent(String argument, boolean formattingEnabled,
-                                                boolean spaceAllowed, boolean forceItalics) {
-        if (!spaceAllowed) {
-            argument = argument.split(" ")[0];
-        }
-        if (formattingEnabled) {
-            MutableComponent complete = Component.empty();
-
-            StringReader argumentReader = new StringReader(argument);
-            StringBuilder currentText = new StringBuilder();
-            Style currentStyle = Style.EMPTY;
-            if (forceItalics) {
-                currentStyle = currentStyle.withItalic(false);
-            }
-
-            try {
-                int c = argumentReader.read();
-                boolean formatting = false;
-                boolean wasFormatting = false;
-                while (c != -1) {
-                    char current = (char) c;
-
-                    if (current == FORMATTING_CODE) {
-                        if (formatting) {
-                            formatting = false;
-                            wasFormatting = false;
-                            currentText.append(current);
-                        } else {
-                            formatting = true;
-                        }
-                    } else if (current == HEX_CODE && formatting) {
-                        formatting = false;
-                        if (!currentText.isEmpty()) {
-                            complete.append(Component.literal(currentText.toString()).setStyle(currentStyle));
-                        }
-
-                        currentText = new StringBuilder();
-                        currentStyle = Style.EMPTY;
-                        if (forceItalics) {
-                            currentStyle = currentStyle.withItalic(false);
-                        }
-
-                        char[] hexChars = new char[6];
-                        int read = argumentReader.read(hexChars, 0, 6);
-                        if (read < 6) {
-                            throw new IllegalArgumentException("Invalid hex formatting code");
-                        }
-
-                        try {
-                            int colour = Integer.parseInt(String.valueOf(hexChars), 16);
-                            currentStyle = currentStyle.withColor(colour);
-                        } catch (NumberFormatException exception) {
-                            throw new IllegalArgumentException("Invalid hex formatting code",
-                                    exception);
-                        }
-
-                        wasFormatting = true;
-                    } else if (formatting) {
-                        formatting = false;
-
-                        ChatFormatting newStyle = ChatFormatting.getByCode(current);
-                        if (newStyle == null) {
-                            throw new IllegalArgumentException("Invalid formatting code");
-                        }
-
-                        if (newStyle.isColor() || newStyle == ChatFormatting.RESET || !wasFormatting) {
-                            if (!currentText.isEmpty()) {
-                                complete.append(Component.literal(currentText.toString()).setStyle(currentStyle));
-                            }
-
-                            currentText = new StringBuilder();
-                            currentStyle = Style.EMPTY;
-                            if (forceItalics) {
-                                currentStyle = currentStyle.withItalic(false);
-                            }
-                        }
-                        wasFormatting = true;
-                        currentStyle = currentStyle.applyFormat(newStyle);
-                    } else {
-                        wasFormatting = false;
-                        currentText.append(current);
-                    }
-
-                    c = argumentReader.read();
-                }
-            } catch (IOException exception) {
-                throw new AssertionError(exception);
-            }
-
-            if (!currentText.isEmpty()) {
-                complete.append(Component.literal(currentText.toString()).setStyle(currentStyle));
-            }
-            return complete;
-        }
-        return Component.nullToEmpty(argument);
     }
 }

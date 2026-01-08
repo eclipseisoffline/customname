@@ -13,7 +13,8 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import xyz.eclipseisoffline.eclipsescustomname.CustomName;
+import xyz.eclipseisoffline.eclipsescustomname.CustomNameCommands;
+import xyz.eclipseisoffline.eclipsescustomname.CustomNameUtil;
 import xyz.eclipseisoffline.eclipsescustomname.NameType;
 import xyz.eclipseisoffline.eclipsescustomname.network.CustomEntityPassengersPacket;
 import xyz.eclipseisoffline.eclipsescustomname.network.FakeTextDisplayHolder;
@@ -36,10 +37,10 @@ public abstract class ServerCommonPacketListenerImplMixin implements ServerCommo
     @Inject(method = "handleCustomClickAction", at = @At("HEAD"), cancellable = true)
     public void handleClearName(ServerboundCustomClickActionPacket packet, CallbackInfo callbackInfo) {
         //noinspection ConstantValue
-        if (packet.id().equals(CustomName.CLEAR_NAME_EVENT) && (Object) this instanceof ServerGamePacketListenerImpl playNetworkHandler) {
+        if (packet.id().equals(CustomNameCommands.CLEAR_NAME_EVENT) && (Object) this instanceof ServerGamePacketListenerImpl playNetworkHandler) {
             callbackInfo.cancel();
             packet.payload().ifPresent(element -> NameType.CODEC.parse(NbtOps.INSTANCE, element)
-                    .ifSuccess(type -> CustomName.clearPlayerName(null, playNetworkHandler.player, type)));
+                    .ifSuccess(type -> CustomNameUtil.clearPlayerName(null, playNetworkHandler.player, type)));
         }
     }
 }

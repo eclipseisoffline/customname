@@ -59,15 +59,13 @@ public class PlayerNameManager extends SavedData {
 
     private static final Codec<Map<UUID, Component>> NAME_MAP_CODEC = Codec.unboundedMap(UUIDUtil.STRING_CODEC, NAME_COMPONENT_CODEC);
 
-    private final CustomNameConfig config;
     private final Map<UUID, Component> playerPrefixes = new HashMap<>();
     private final Map<UUID, Component> playerSuffixes = new HashMap<>();
     private final Map<UUID, Component> playerNicknames = new HashMap<>();
     private final Map<UUID, Component> fullPlayerNames = new HashMap<>();
     private final LuckPerms luckPerms;
 
-    private PlayerNameManager(MinecraftServer server, CustomNameConfig config, Map<UUID, Component> prefixes, Map<UUID, Component> nicknames, Map<UUID, Component> suffixes) {
-        this.config = config;
+    private PlayerNameManager(MinecraftServer server, Map<UUID, Component> prefixes, Map<UUID, Component> nicknames, Map<UUID, Component> suffixes) {
         this.playerPrefixes.putAll(prefixes);
         this.playerNicknames.putAll(nicknames);
         this.playerSuffixes.putAll(suffixes);
@@ -82,7 +80,7 @@ public class PlayerNameManager extends SavedData {
 
                 ServerPlayer player = server.getPlayerList().getPlayer(uuid);
                 if (player != null) {
-                    CustomName.updateListName(player);
+                    CustomNameUtil.updateListName(player);
                 }
             });
         } catch (NoClassDefFoundError | IllegalStateException exception) {
@@ -149,8 +147,7 @@ public class PlayerNameManager extends SavedData {
 
         MutableComponent name = Component.literal("");
         if (permissionsPrefix != null) {
-            name.append(CustomName
-                    .argumentToComponent(permissionsPrefix, config.formattingEnabled(), true, false));
+            name.append(CustomNameUtil.playerNameArgumentToComponent(permissionsPrefix, true));
             name.append(" ");
         }
         if (prefix != null) {
@@ -164,27 +161,26 @@ public class PlayerNameManager extends SavedData {
         }
         if (permissionsSuffix != null) {
             name.append(" ");
-            name.append(CustomName
-                    .argumentToComponent(permissionsSuffix, config.formattingEnabled(), true, false));
+            name.append(CustomNameUtil.playerNameArgumentToComponent(permissionsSuffix, true));
         }
 
         fullPlayerNames.put(player.getUUID(), name);
         ((FakeTextDisplayHolder) player).customName$updateName();
     }
 
-    private static SavedDataType<PlayerNameManager> type(MinecraftServer server, CustomNameConfig config) {
+    private static SavedDataType<PlayerNameManager> type(MinecraftServer server) {
         Codec<PlayerNameManager> codec = RecordCodecBuilder.create(instance ->
                 instance.group(
                         NAME_MAP_CODEC.fieldOf("prefixes").forGetter(manager -> manager.playerPrefixes),
                         NAME_MAP_CODEC.fieldOf("nicknames").forGetter(manager -> manager.playerNicknames),
                         NAME_MAP_CODEC.fieldOf("suffixes").forGetter(manager -> manager.playerSuffixes)
-                ).apply(instance, (prefixes, nicknames, suffixes) -> new PlayerNameManager(server, config, prefixes, nicknames, suffixes))
+                ).apply(instance, (prefixes, nicknames, suffixes) -> new PlayerNameManager(server, prefixes, nicknames, suffixes))
         );
-        return new SavedDataType<>(CustomName.MOD_ID, () -> new PlayerNameManager(server, config, Map.of(), Map.of(), Map.of()), codec, null);
+        return new SavedDataType<>(CustomName.MOD_ID, () -> new PlayerNameManager(server, Map.of(), Map.of(), Map.of()), codec, null);
     }
 
     public static PlayerNameManager getPlayerNameManager(MinecraftServer server) {
-        return server.overworld().getDataStorage().computeIfAbsent(type(server, CustomName.getConfig()));
+        return server.overworld().getDataStorage().computeIfAbsent(type(server));
     }
 
     public static PlayerNameManager getPlayerNameManager(CommandSourceStack source) {
