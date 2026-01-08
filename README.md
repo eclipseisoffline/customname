@@ -6,6 +6,8 @@
 [![Discord Badge](https://img.shields.io/badge/chat-discord-%235865f2)](https://discord.gg/CNNkyWRkqm)
 [![Github Badge](https://img.shields.io/badge/github-customname-white?logo=github)](https://github.com/eclipseisoffline/customname)
 ![GitHub License](https://img.shields.io/github/license/eclipseisoffline/customname)
+![Available for Fabric](https://img.shields.io/badge/available_for-fabric-_?color=%23dbd0b4)
+![Available for NeoForge](https://img.shields.io/badge/available_for-NeoForge-_?color=%23e58c53)
 
 This mod adds a `/name`, a `/itemname` and a `/itemlore` command to Minecraft, which players can use to set a prefix, suffix, or nickname,
 or give their items colourful names and lore. Mostly designed to be used in small, private servers, although through the
