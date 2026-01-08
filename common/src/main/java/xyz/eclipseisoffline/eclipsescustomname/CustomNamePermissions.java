@@ -6,6 +6,7 @@ import net.minecraft.server.permissions.PermissionLevel;
 
 import java.util.function.Predicate;
 
+@FunctionalInterface
 public interface CustomNamePermissions {
 
     String ROOT_PERMISSION_NODE = "customname";

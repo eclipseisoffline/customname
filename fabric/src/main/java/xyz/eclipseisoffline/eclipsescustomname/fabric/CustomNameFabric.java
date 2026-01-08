@@ -30,7 +30,7 @@ public class CustomNameFabric extends CustomName implements ModInitializer {
 
     @Override
     protected CustomNamePermissions createPermissions() {
-        return new CustomNameFabricPermissions();
+        return (_, _) -> false; // FIXME when permissions API works again
     }
 
     @Override
