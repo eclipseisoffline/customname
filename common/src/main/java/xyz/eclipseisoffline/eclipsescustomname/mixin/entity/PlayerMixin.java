@@ -1,13 +1,10 @@
 package xyz.eclipseisoffline.eclipsescustomname.mixin.entity;
 
-import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
-import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
-import xyz.eclipseisoffline.eclipsescustomname.CustomName;
+import org.spongepowered.asm.mixin.injection.ModifyArg;
 import xyz.eclipseisoffline.eclipsescustomname.PlayerNameManager;
 
-import java.util.Objects;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.EntityType;
@@ -23,11 +20,12 @@ public abstract class PlayerMixin extends LivingEntity {
         super(type, level);
     }
 
-    @WrapOperation(method = "getDisplayName", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Player;getName()Lnet/minecraft/network/chat/Component;"))
-    public Component setCustomName(Player player, Operation<Component> original) {
-        if (player instanceof ServerPlayer serverPlayer) {
-            return PlayerNameManager.getPlayerNameManager(serverPlayer.level().getServer()).getFullPlayerName(serverPlayer);
+    @ModifyArg(method = "getDisplayName", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/scores/PlayerTeam;formatNameForTeam(Lnet/minecraft/world/scores/Team;Lnet/minecraft/network/chat/Component;)Lnet/minecraft/network/chat/MutableComponent;"))
+    public Component applyCustomName(Component original) {
+        //noinspection ConstantValue
+        if ((Object) this instanceof ServerPlayer player) {
+            return PlayerNameManager.getPlayerNameManager(player.level().getServer()).getFullPlayerName(player);
         }
-        return original.call(player);
+        return original;
     }
 }
