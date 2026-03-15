@@ -10,11 +10,15 @@
     "entity.EntityMixin",
     "entity.PlayerMixin",
     "entity.ServerPlayerMixin",
+    "filefix.DataFixersMixin",
     "network.ClientboundSetPassengersPacketMixin",
     "network.ClientboundSetPlayerTeamPacketParametersMixin",
     "network.ServerCommonPacketListenerImplMixin"
   ],
   "injectors": {
     "defaultRequire": 1
+  },
+  "mixinextras": {
+    "minVersion": "0.5.0"
   }
 }
