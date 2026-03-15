@@ -1,10 +1,10 @@
 [versions]
-multimod = "0.2.4"
+multimod = "0.2.5"
 
-minecraft = "26.1-snapshot-2"
-minecraft-release = "26.1-snapshot-2"
+minecraft = "26.1-pre-2"
+minecraft-release = "26.1-pre-2"
 
-fabric-api = "0.141.2+26.1"
+fabric-api = "0.143.14+26.1"
 fabric-permissions-api = "0.6.1"
 
 neoforge = "26.1.0.0-alpha.5+snapshot-2"

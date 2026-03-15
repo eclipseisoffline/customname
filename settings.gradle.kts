@@ -22,4 +22,4 @@ pluginManagement {
 
 rootProject.name = "CustomName"
 
-include("common", "fabric", "neoforge")
+include("common", "fabric")//, "neoforge")
