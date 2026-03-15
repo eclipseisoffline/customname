@@ -3,6 +3,7 @@ package xyz.eclipseisoffline.eclipsescustomname;
 import com.mojang.brigadier.CommandDispatcher;
 
 import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.resources.Identifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,5 +46,9 @@ public abstract class CustomName {
 
     public static CustomNamePermissions getPermissions() {
         return permissions;
+    }
+
+    public static Identifier getModdedIdentifier(String path) {
+        return Identifier.fromNamespaceAndPath(CustomName.MOD_ID, path);
     }
 }

@@ -30,7 +30,7 @@ import java.util.Optional;
 import java.util.function.Predicate;
 
 public class CustomNameCommands {
-    public static final Identifier CLEAR_NAME_EVENT = Identifier.fromNamespaceAndPath(CustomName.MOD_ID, "clear_name");
+    public static final Identifier CLEAR_NAME_EVENT = CustomName.getModdedIdentifier("clear_name");
 
     private static final String NAME_COMMAND_ROOT = "name";
 

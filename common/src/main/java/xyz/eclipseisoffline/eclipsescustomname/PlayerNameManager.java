@@ -26,6 +26,7 @@ import net.minecraft.core.UUIDUtil;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.ComponentSerialization;
 import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.resources.Identifier;
 import net.minecraft.resources.RegistryOps;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
@@ -34,6 +35,8 @@ import net.minecraft.world.level.saveddata.SavedDataType;
 import xyz.eclipseisoffline.eclipsescustomname.network.FakeTextDisplayHolder;
 
 public class PlayerNameManager extends SavedData {
+    private static final Identifier ID = CustomName.getModdedIdentifier("names");
+
     private static final Codec<Component> LEGACY_COMPONENT_CODEC = new Codec<>() {
         @Override
         public <T> DataResult<Pair<Component, T>> decode(DynamicOps<T> ops, T input) {
@@ -176,11 +179,11 @@ public class PlayerNameManager extends SavedData {
                         NAME_MAP_CODEC.fieldOf("suffixes").forGetter(manager -> manager.playerSuffixes)
                 ).apply(instance, (prefixes, nicknames, suffixes) -> new PlayerNameManager(server, prefixes, nicknames, suffixes))
         );
-        return new SavedDataType<>(CustomName.MOD_ID, () -> new PlayerNameManager(server, Map.of(), Map.of(), Map.of()), codec, null);
+        return new SavedDataType<>(ID, () -> new PlayerNameManager(server, Map.of(), Map.of(), Map.of()), codec, null);
     }
 
     public static PlayerNameManager getPlayerNameManager(MinecraftServer server) {
-        return server.overworld().getDataStorage().computeIfAbsent(type(server));
+        return server.getDataStorage().computeIfAbsent(type(server));
     }
 
     public static PlayerNameManager getPlayerNameManager(CommandSourceStack source) {
