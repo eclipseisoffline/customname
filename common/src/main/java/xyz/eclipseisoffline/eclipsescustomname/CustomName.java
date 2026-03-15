@@ -4,6 +4,7 @@ import com.mojang.brigadier.CommandDispatcher;
 
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.resources.Identifier;
+import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,8 +16,10 @@ public abstract class CustomName {
     public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
 
     private static boolean initialized = false;
-    private static CustomNameConfig config;
-    private static CustomNamePermissions permissions;
+    @Nullable
+    private static CustomNameConfig config = null;
+    @Nullable
+    private static CustomNamePermissions permissions = null;
 
     public void initialize() {
         if (initialized) {
@@ -41,10 +44,16 @@ public abstract class CustomName {
     protected abstract void registerCommands(Consumer<CommandDispatcher<CommandSourceStack>> registerer);
 
     public static CustomNameConfig getConfig() {
+        if (config == null) {
+            throw new NullPointerException("CustomNameConfig was accessed before it was initialized!");
+        }
         return config;
     }
 
     public static CustomNamePermissions getPermissions() {
+        if (permissions == null) {
+            throw new NullPointerException("CustomNamePermissions was accessed before it was initialized!");
+        }
         return permissions;
     }
 

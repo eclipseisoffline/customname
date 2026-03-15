@@ -51,7 +51,7 @@ public abstract class ServerPlayerMixin extends Player implements FakeTextDispla
     @Inject(method = "<init>", at = @At("TAIL"))
     public void initFakeArmorStand(MinecraftServer server, ServerLevel level, GameProfile profile, ClientInformation clientInformation,
                                    CallbackInfo callbackInfo) {
-        if (CustomName.getConfig().displayAbovePlayer()) {
+        if (CustomName.getConfig().displaySettings().enabled()) {
             fakeTextDisplayIds = new int[]{EntityAccessor.getEntityCounter().incrementAndGet(), EntityAccessor.getEntityCounter().incrementAndGet()};
             fakeTextDisplayUuids = new UUID[]{UUID.randomUUID(), UUID.randomUUID()};
         }
@@ -94,17 +94,22 @@ public abstract class ServerPlayerMixin extends Player implements FakeTextDispla
                     0.0F, 0.0F, EntityType.TEXT_DISPLAY, 0, Vec3.ZERO, 0.0));
             player.connection.send(new ClientboundSetPassengersPacket(this)); // Text display passenger is added through mixin in network handler to increase compatibility with other mods
 
+            byte defaultTextOpacity = (byte) CustomName.getConfig().displaySettings().textOpacity();
+            byte coveredTextOpacity = (byte) (CustomName.getConfig().displaySettings().textOpacity() / 2);
+
             player.connection.send(new ClientboundSetEntityDataPacket(fakeTextDisplayIds[0],
                     List.of(SynchedEntityData.DataValue.create(DisplayAccessor.TextDisplayAccessor.getDataTextId(), displayNameText(lastClientInput, false)),
                             SynchedEntityData.DataValue.create(DisplayAccessor.getDataTranslationId(), new Vector3f(0.0F, 0.2F, 0.0F)),
                             SynchedEntityData.DataValue.create(DisplayAccessor.getDataBillboardRenderConstraintsId(), (byte) 3), // Centre billboard
-                            SynchedEntityData.DataValue.create(DisplayAccessor.TextDisplayAccessor.getDataTextOpacityId(), (byte) 127),
-                            SynchedEntityData.DataValue.create(DisplayAccessor.TextDisplayAccessor.getDataStyleFlagsId(), lastClientInput.shift() ? (byte) 0 : (byte) (1 << 1))))); // See through blocks when not sneaking
+                            SynchedEntityData.DataValue.create(DisplayAccessor.TextDisplayAccessor.getDataTextOpacityId(), coveredTextOpacity),
+                            SynchedEntityData.DataValue.create(DisplayAccessor.TextDisplayAccessor.getDataStyleFlagsId(), lastClientInput.shift() ? (byte) 0 : (byte) (1 << 1)), // See through blocks when not sneaking
+                            SynchedEntityData.DataValue.create(DisplayAccessor.TextDisplayAccessor.getDataBackgroundColorId(), CustomName.getConfig().displaySettings().backgroundColor()))));
 
             player.connection.send(new ClientboundSetEntityDataPacket(fakeTextDisplayIds[1],
                     List.of(SynchedEntityData.DataValue.create(DisplayAccessor.TextDisplayAccessor.getDataTextId(), displayNameText(lastClientInput, true)),
                             SynchedEntityData.DataValue.create(DisplayAccessor.getDataTranslationId(), new Vector3f(0.0F, 0.2F, 0.0F)),
                             SynchedEntityData.DataValue.create(DisplayAccessor.getDataBillboardRenderConstraintsId(), (byte) 3), // Centre billboard
+                            SynchedEntityData.DataValue.create(DisplayAccessor.TextDisplayAccessor.getDataTextOpacityId(), defaultTextOpacity),
                             SynchedEntityData.DataValue.create(DisplayAccessor.TextDisplayAccessor.getDataBackgroundColorId(), 0))));
         }
     }

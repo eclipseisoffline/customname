@@ -31,9 +31,10 @@ import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.ExtraCodecs;
+import net.minecraft.world.entity.Display;
 
 public record CustomNameConfig(boolean formattingEnabled, boolean requirePermissions, List<Pattern> blacklistedNames,
-                               int maxNameLength, boolean operatorsBypassRestrictions, boolean displayAbovePlayer,
+                               int maxNameLength, boolean operatorsBypassRestrictions, CustomNameDisplaySettings displaySettings,
                                CustomNameGroups groups) {
     private static final int MAX_MAX_LENGTH = 32;
     private static final Path CONFIG_FILE = Path.of(CustomName.MOD_ID + ".json");
@@ -46,13 +47,13 @@ public record CustomNameConfig(boolean formattingEnabled, boolean requirePermiss
                     fallbackIfMissing(PATTERN_CODEC.listOf(), "blacklisted_names", List.of()).forGetter(CustomNameConfig::blacklistedNames),
                     fallbackIfMissing(ExtraCodecs.intRange(1, MAX_MAX_LENGTH), "max_name_length", 16).forGetter(CustomNameConfig::maxNameLength),
                     fallbackIfMissing(Codec.BOOL, "operators_bypass_restrictions", false).forGetter(CustomNameConfig::operatorsBypassRestrictions),
-                    fallbackIfMissing(Codec.BOOL, "display_above_player", false).forGetter(CustomNameConfig::displayAbovePlayer),
+                    fallbackIfMissing(CustomNameDisplaySettings.CODEC_WITH_LEGACY_ALTERNATIVE, "display_above_player", CustomNameDisplaySettings.DEFAULT).forGetter(CustomNameConfig::displaySettings),
                     fallbackIfMissing(CustomNameGroups.CODEC, "name_groups", CustomNameGroups.EMPTY).forGetter(CustomNameConfig::groups)
             ).apply(instance, CustomNameConfig::new)
     );
 
     private static final CustomNameConfig DEFAULT = new CustomNameConfig(true, true, List.of(),
-            16, false, false, CustomNameGroups.EMPTY);
+            16, false, CustomNameDisplaySettings.DEFAULT, CustomNameGroups.EMPTY);
 
     public boolean nameBlacklisted(String name) {
         for (Pattern blacklisted : blacklistedNames) {
@@ -103,6 +104,19 @@ public record CustomNameConfig(boolean formattingEnabled, boolean requirePermiss
 
     private static <T> MapCodec<T> fallbackIfMissing(Codec<T> codec, String name, T fallback) {
         return codec.optionalFieldOf(name).xmap(optional -> optional.orElse(fallback), Optional::of);
+    }
+
+    public record CustomNameDisplaySettings(boolean enabled, int textOpacity, int backgroundColor) {
+        public static final CustomNameDisplaySettings DEFAULT = new CustomNameDisplaySettings(false, 255, Display.TextDisplay.INITIAL_BACKGROUND);
+        public static final Codec<CustomNameDisplaySettings> CODEC = RecordCodecBuilder.create(instance ->
+                instance.group(
+                        Codec.BOOL.fieldOf("enabled").forGetter(CustomNameDisplaySettings::enabled),
+                        Codec.intRange(0, 255).fieldOf("text_opacity").forGetter(CustomNameDisplaySettings::textOpacity),
+                        ExtraCodecs.STRING_ARGB_COLOR.fieldOf("background_color").forGetter(CustomNameDisplaySettings::backgroundColor)
+                ).apply(instance, CustomNameDisplaySettings::new)
+        );
+        public static final Codec<CustomNameDisplaySettings> CODEC_WITH_LEGACY_ALTERNATIVE = Codec.withAlternative(CODEC, Codec.BOOL,
+                enabled -> new CustomNameDisplaySettings(enabled, DEFAULT.textOpacity, DEFAULT.backgroundColor));
     }
 
     public record CustomNameGroups(Map<NameType, Map<String, List<ParsedPlayerName>>> nameGroups,

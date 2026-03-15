@@ -14,7 +14,7 @@ public abstract class ClientboundSetPlayerTeamPacketParametersMixin {
 
     @WrapOperation(method = "<init>(Lnet/minecraft/world/scores/PlayerTeam;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/scores/PlayerTeam;getNameTagVisibility()Lnet/minecraft/world/scores/Team$Visibility;"))
     public Team.Visibility returnNeverIfUsingCustomNames(PlayerTeam instance, Operation<Team.Visibility> original) {
-        if (CustomName.getConfig().displayAbovePlayer()) {
+        if (CustomName.getConfig().displaySettings().enabled()) {
             return Team.Visibility.NEVER;
         }
         return original.call(instance);
