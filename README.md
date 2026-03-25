@@ -6,6 +6,8 @@
 [![Discord Badge](https://img.shields.io/badge/chat-discord-%235865f2)](https://discord.gg/CNNkyWRkqm)
 [![Github Badge](https://img.shields.io/badge/github-customname-white?logo=github)](https://github.com/eclipseisoffline/customname)
 ![GitHub License](https://img.shields.io/github/license/eclipseisoffline/customname)
+![Available for Fabric](https://img.shields.io/badge/available_for-fabric-_?color=%23dbd0b4)
+![Available for NeoForge](https://img.shields.io/badge/available_for-NeoForge-_?color=%23e58c53)
 
 This mod adds a `/name`, a `/itemname` and a `/itemlore` command to Minecraft, which players can use to set a prefix, suffix, or nickname,
 or give their items colourful names and lore. Mostly designed to be used in small, private servers, although through the
@@ -31,23 +33,26 @@ For support and/or any questions you may have, feel free to join [my discord](ht
 
 | Minecraft Version | Status       |
 |-------------------|--------------|
-| 1.21.11           | ✅ Current    |
+| 26.1              | ✅ Current    |
+| 1.21.11           | ✔️ Available |
 | 1.21.9+10         | ✔️ Available |
 | 1.21.6+7+8        | ✔️ Available |
 | 1.21.5            | ✔️ Available |
 | 1.21.4            | ✔️ Available |
 | 1.21.2+3          | ✔️ Available |
-| 1.21+1            | ✅ Current    |
+| 1.21+1            | ✔️ Available |
 | 1.20.5+6          | ✔️ Available |
 | 1.20.4            | ✔️ Available |
 | 1.20.1            | ✔️ Available |
 | 1.19.4            | ✔️ Available |
 | 1.19.2            | ✔️ Available |
 
-I try to keep support up for the latest major and latest minor release of Minecraft. Updates to newer Minecraft
+I try to keep support up for the latest drop of Minecraft. Updates to newer Minecraft
 versions may be delayed from time to time, as I do not always have the time to immediately update my mods.
 
-Unsupported versions are still available to download, but they won't receive new features or bugfixes.
+Unsupported versions are/ still available to download, but they won't receive new features or bugfixes.
+
+NeoForge ports are available for Minecraft 26.1 onwards.
 
 ## Usage
 
@@ -96,7 +101,11 @@ By default, the configuration file looks like this:
   "blacklisted_names": [],
   "max_name_length": 16,
   "operators_bypass_restrictions": false,
-  "display_above_player": false,
+  "display_above_player": {
+    "enabled": false,
+    "text_opacity": 255,
+    "background_color": "#40000000"
+  },
   "name_groups": {
     "prefix": {},
     "nickname": {},
@@ -110,7 +119,9 @@ By default, the configuration file looks like this:
 - `blacklisted_names` is a list of regexes that are blacklisted. When a prefix, suffix or nickname matches one of these regexes, they won't be able to be used.
 - `max_name_length` controls how long a player prefix/nickname/suffix can be, which can be 32 at most.
 - `operators_bypass_restrictions` can be used to disable name restrictions for operators. When this is enabled, operators and people with the permission `customname.bypass_restrictions` can use spaces in nicknames, bypass the max length restriction, and more.
-- `display_above_player` controls whether the player's custom name should display above their head in game. This is currently not compatible with hiding name tags using teams.
+- `display_above_player` controls whether the player's custom name should display above their head in game. This is currently not compatible with hiding name tags using teams. The appearance can be further configured using the following options:
+  - `text_opacity`: controls the opacity of the text. `255` is fully visible, `0` is transparent.
+  - `background_color`: the HEX-background colour of the name. This is in ARGB format, so the first 2 digits indicate the alpha value.
 - `name_groups` can be used to create name groups for each name type. Name groups consist of a list of names, which follow the same format used in name commands. You can assign players to one or more name groups by giving them permissions to the respective groups. They will then be able to use names listed in those groups.
 
 For example, consider this name groups config:
@@ -123,14 +134,14 @@ For example, consider this name groups config:
       "&f&l[&9VIP&f&l]",
       "&f&l[&aVIP&f&l]",
       "&f&l[&bVIP&f&l]",
-      "&f&l[&cVIP&f&l]",
+      "&f&l[&cVIP&f&l]"
     ],
     "legendary": [
       "&f&l[&7Legendary&f&l]",
       "&f&l[&9Legendary&f&l]",
       "&f&l[&aLegendary&f&l]",
       "&f&l[&bLegendary&f&l]",
-      "&f&l[&cLegendary&f&l]",
+      "&f&l[&cLegendary&f&l]"
     ]
   },
   "nickname": {},

@@ -1,0 +1,15 @@
+package xyz.eclipseisoffline.eclipsescustomname;
+
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.DataResult;
+import net.minecraft.network.chat.Component;
+
+public record ParsedPlayerName(String raw, Component parsed) {
+    public static final Codec<ParsedPlayerName> CODEC = Codec.STRING.comapFlatMap(raw -> {
+        try {
+            return DataResult.success(new ParsedPlayerName(raw, CustomNameUtil.nameArgumentToComponent(raw, true, false, false)));
+        } catch (IllegalArgumentException exception) {
+            return DataResult.error(() -> "Failed to parse player name: " + exception.getMessage());
+        }
+    }, ParsedPlayerName::raw);
+}

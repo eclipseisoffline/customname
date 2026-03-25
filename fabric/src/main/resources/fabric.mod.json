@@ -1,0 +1,53 @@
+{
+  "schemaVersion": 1,
+  "id": "${mod_id}",
+  "version": "${version}",
+  "name": "${mod_name}",
+  "description": "${mod_description}",
+  "authors": [
+    {
+      "name": "eclipseisoffline",
+      "contact": {
+        "homepage": "https://github.com/eclipseisoffline"
+      }
+    }
+  ],
+  "contact": {
+    "website": "https://modrinth.com/mod/${modrinth_id}",
+    "issues": "https://github.com/eclipseisoffline/${github_repository}/issues",
+    "sources": "https://github.com/eclipseisoffline/${github_repository}"
+  },
+  "license": "LGPL-3.0-only",
+  "icon": "assets/eclipsescustomname/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "filefix": [
+      "xyz.eclipseisoffline.eclipsescustomname.CustomNameFileFixes"
+    ],
+    "main": [
+      "xyz.eclipseisoffline.eclipsescustomname.fabric.CustomNameFabric"
+    ]
+  },
+  "mixins": [
+    "eclipsescustomname.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=${fabric_loader_version}",
+    "fabric-api": ">=${fabric_api_version}",
+    "minecraft": "${minecraft_version}",
+    "filefixutils": "*",
+    "commonpermissionsapi": "*"
+  },
+  "suggests": {
+    "luckperms": "*"
+  },
+  "custom": {
+    "modmenu": {
+      "links": {
+        "modmenu.donate": "https://buymeacoffee.com/eclipseisoffline",
+        "modmenu.buymeacoffee": "https://buymeacoffee.com/eclipseisoffline",
+        "modmenu.modrinth": "https://modrinth.com/mod/fabric-custom-names"
+      }
+    }
+  }
+}
