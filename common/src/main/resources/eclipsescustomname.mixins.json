@@ -10,7 +10,6 @@
     "entity.EntityMixin",
     "entity.PlayerMixin",
     "entity.ServerPlayerMixin",
-    "filefix.DataFixersMixin",
     "network.ClientboundSetPassengersPacketMixin",
     "network.ClientboundSetPlayerTeamPacketParametersMixin",
     "network.ServerCommonPacketListenerImplMixin"

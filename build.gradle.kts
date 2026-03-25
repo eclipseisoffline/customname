@@ -14,6 +14,15 @@ multimod {
 
     archivesBaseName = properties["archives_base_name"] as String
 
+    settings {
+        repositories {
+            maven {
+                name = "eclipseisoffline"
+                url = uri("https://maven.eclipseisoffline.xyz/releases")
+            }
+        }
+    }
+
     minecraft {
         minecraft = libs.minecraft
         supported(libs.versions.minecraft.release)
@@ -21,6 +30,11 @@ multimod {
 
     fabricApi = libs.fabric.api
     neoForgeVersion = libs.versions.neoforge
+
+    sharedDependencies {
+        multiModInclude(multiModImplementation(libs.commonpermissionsapi))
+        multiModInclude(multiModImplementation(libs.filefixutils))
+    }
 
     modPublishing {
         base {

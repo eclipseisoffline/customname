@@ -14,15 +14,21 @@ description='''${mod_description}'''
 config="eclipsescustomname.mixins.json"
 
 [[dependencies]]
-    modId="neoforge"
-    type="required"
-    versionRange="${neoforge_version}"
-    ordering="NONE"
-    side="BOTH"
+modId="filefixutils"
+type="required"
+ordering="AFTER"
+side="BOTH"
 
 [[dependencies]]
-    modId="minecraft"
-    type="required"
-    versionRange="${neoforge_minecraft_version}"
-    ordering="NONE"
-    side="BOTH"
+modId="neoforge"
+type="required"
+versionRange="${neoforge_version}"
+ordering="NONE"
+side="BOTH"
+
+[[dependencies]]
+modId="minecraft"
+type="required"
+versionRange="${neoforge_minecraft_version}"
+ordering="NONE"
+side="BOTH"

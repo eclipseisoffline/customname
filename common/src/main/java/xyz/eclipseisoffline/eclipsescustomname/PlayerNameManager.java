@@ -35,7 +35,7 @@ import net.minecraft.world.level.saveddata.SavedDataType;
 import xyz.eclipseisoffline.eclipsescustomname.network.FakeTextDisplayHolder;
 
 public class PlayerNameManager extends SavedData {
-    private static final Identifier ID = CustomName.getModdedIdentifier("names");
+    public static final Identifier ID = CustomName.getModdedIdentifier("names");
 
     private static final Codec<Component> LEGACY_COMPONENT_CODEC = new Codec<>() {
         @Override

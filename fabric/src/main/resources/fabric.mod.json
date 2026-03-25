@@ -21,6 +21,9 @@
   "icon": "assets/eclipsescustomname/icon.png",
   "environment": "*",
   "entrypoints": {
+    "filefix": [
+      "xyz.eclipseisoffline.eclipsescustomname.CustomNameFileFixes"
+    ],
     "main": [
       "xyz.eclipseisoffline.eclipsescustomname.fabric.CustomNameFabric"
     ]
@@ -31,11 +34,11 @@
   "depends": {
     "fabricloader": ">=${fabric_loader_version}",
     "fabric-api": ">=${fabric_api_version}",
-    "minecraft": "${minecraft_version}"
+    "minecraft": "${minecraft_version}",
+    "filefixutils": "*"
   },
   "suggests": {
-    "luckperms": "*",
-    "fabric-permissions-api-v0": "*"
+    "luckperms": "*"
   },
   "custom": {
     "modmenu": {
