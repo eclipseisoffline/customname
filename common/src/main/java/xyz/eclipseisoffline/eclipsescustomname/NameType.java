@@ -2,20 +2,21 @@ package xyz.eclipseisoffline.eclipsescustomname;
 
 import com.mojang.serialization.Codec;
 import net.minecraft.util.StringRepresentable;
+import xyz.eclipseisoffline.commonpermissionsapi.api.CommonPermissionNode;
 
 public enum NameType implements StringRepresentable {
-    PREFIX("prefix", "prefixes", "prefix", "Prefix"),
-    SUFFIX("suffix", "suffixes", "suffix", "Suffix"),
-    NICKNAME("nickname", "nicknames", "nick", "Nickname");
+    PREFIX("prefix", "prefixes", CustomNamePermissions.PREFIX, "Prefix"),
+    SUFFIX("suffix", "suffixes", CustomNamePermissions.SUFFIX, "Suffix"),
+    NICKNAME("nickname", "nicknames", CustomNamePermissions.NICKNAME, "Nickname");
 
     public static final Codec<NameType> CODEC = StringRepresentable.fromEnum(NameType::values);
     
     private final String name;
     private final String plural;
-    private final String permission;
+    private final CommonPermissionNode permission;
     private final String displayName;
 
-    NameType(String name, String plural, String permission, String displayName) {
+    NameType(String name, String plural, CommonPermissionNode permission, String displayName) {
         this.name = name;
         this.plural = plural;
         this.permission = permission;
@@ -31,7 +32,7 @@ public enum NameType implements StringRepresentable {
         return plural;
     }
 
-    public String getPermission() {
+    public CommonPermissionNode getPermission() {
         return permission;
     }
 

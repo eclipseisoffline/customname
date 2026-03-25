@@ -1,34 +1,24 @@
 package xyz.eclipseisoffline.eclipsescustomname;
 
-import net.minecraft.commands.CommandSourceStack;
-import net.minecraft.server.permissions.Permission;
-import net.minecraft.server.permissions.PermissionLevel;
+import net.minecraft.resources.Identifier;
+import xyz.eclipseisoffline.commonpermissionsapi.api.CommonPermissionNode;
+import xyz.eclipseisoffline.commonpermissionsapi.api.CommonPermissions;
 
-import java.util.function.Predicate;
-
-@FunctionalInterface
 public interface CustomNamePermissions {
+
+    CommonPermissionNode PREFIX = createNode("prefix");
+    CommonPermissionNode SUFFIX = createNode("suffix");
+    CommonPermissionNode NICKNAME = createNode("nickname");
+    CommonPermissionNode ITEM_NAME = createNode("itemname");
+    CommonPermissionNode ITEM_LORE = createNode("itemlore");
+    CommonPermissionNode OTHER = createNode("other");
+    CommonPermissionNode BYPASS_RESTRICTIONS = createNode("bypass_restrictions");
 
     String ROOT_PERMISSION_NODE = "customname";
 
-    default Predicate<CommandSourceStack> permissionCheck(String permission) {
-        return source -> checkPermission(source, permission);
+    static CommonPermissionNode createNode(String name) {
+        return CommonPermissions.node(Identifier.fromNamespaceAndPath(ROOT_PERMISSION_NODE, name));
     }
 
-    default boolean checkPermission(CommandSourceStack source, String permission) {
-        if (CustomName.getConfig().requirePermissions()) {
-            return hasPermission(source, getPermissionNode(permission), PermissionLevel.GAMEMASTERS);
-        }
-        return true;
-    }
-
-    default boolean hasPermission(CommandSourceStack source, String permission, PermissionLevel fallback) {
-        return hasPermission(source, permission) || source.permissions().hasPermission(new Permission.HasCommandLevel(fallback));
-    }
-
-    boolean hasPermission(CommandSourceStack source, String permission);
-
-    static String getPermissionNode(String node) {
-        return ROOT_PERMISSION_NODE + "." + node;
-    }
+    static void bootstrap() {}
 }

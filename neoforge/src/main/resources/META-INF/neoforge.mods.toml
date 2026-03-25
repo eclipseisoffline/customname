@@ -16,7 +16,11 @@ config="eclipsescustomname.mixins.json"
 [[dependencies]]
 modId="filefixutils"
 type="required"
-ordering="AFTER"
+side="BOTH"
+
+[[dependencies]]
+modId="commonpermissionsapi"
+type="required"
 side="BOTH"
 
 [[dependencies]]

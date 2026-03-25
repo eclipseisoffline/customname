@@ -30,8 +30,11 @@ import java.util.stream.Collectors;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.permissions.PermissionLevel;
 import net.minecraft.util.ExtraCodecs;
 import net.minecraft.world.entity.Display;
+import xyz.eclipseisoffline.commonpermissionsapi.api.CommonPermissionNode;
+import xyz.eclipseisoffline.commonpermissionsapi.api.CommonPermissions;
 
 public record CustomNameConfig(boolean formattingEnabled, boolean requirePermissions, List<Pattern> blacklistedNames,
                                int maxNameLength, boolean operatorsBypassRestrictions, CustomNameDisplaySettings displaySettings,
@@ -119,8 +122,9 @@ public record CustomNameConfig(boolean formattingEnabled, boolean requirePermiss
                 enabled -> new CustomNameDisplaySettings(enabled, DEFAULT.textOpacity, DEFAULT.backgroundColor));
     }
 
+    // TODO Structure a bit messy here, maybe rework the codecs later
     public record CustomNameGroups(Map<NameType, Map<String, List<ParsedPlayerName>>> nameGroups,
-                                   Map<NameType, List<String>> groupPermissionNodes) {
+                                   Map<NameType, List<CustomNameGroup>> parsedGroups) {
         private static final Predicate<String> GROUP_NAME_PREDICATE = Pattern.compile("^([A-Z]|[a-z]|_)+$").asMatchPredicate();
         private static final Codec<String> GROUP_NAME_CODEC = Codec.STRING.validate(name -> {
             if (GROUP_NAME_PREDICATE.test(name)) {
@@ -134,22 +138,22 @@ public record CustomNameConfig(boolean formattingEnabled, boolean requirePermiss
 
         public CustomNameGroups(Map<NameType, Map<String, List<ParsedPlayerName>>> nameGroups) {
             this(nameGroups, nameGroups.entrySet().stream()
-                    .map(entry -> Pair.of(entry.getKey(), entry.getValue().keySet().stream()
-                            .map(group -> getGroupPermissionNode(entry.getKey(), group))
+                    .map(entry -> Pair.of(entry.getKey(), entry.getValue().entrySet().stream()
+                            .map(group -> new CustomNameGroup(entry.getKey(), group))
                             .toList()))
                     .collect(Collectors.toMap(Pair::getFirst, Pair::getSecond)));
         }
 
         public List<ParsedPlayerName> validNames(CommandSourceStack source, NameType nameType) {
-            Map<String, List<ParsedPlayerName>> groups = nameGroups.get(nameType);
+            List<CustomNameGroup> groups = parsedGroups.get(nameType);
             if (groups == null) {
                 return List.of();
             }
 
             List<ParsedPlayerName> names = new ArrayList<>();
-            for (String group : groups.keySet()) {
-                if (CustomName.getPermissions().checkPermission(source, getGroupPermissionNode(nameType, group))) {
-                    names.addAll(groups.get(group));
+            for (CustomNameGroup group : groups) {
+                if (CommonPermissions.check(source, group.permission, PermissionLevel.GAMEMASTERS)) {
+                    names.addAll(group.allowedNames);
                 }
             }
 
@@ -163,20 +167,15 @@ public record CustomNameConfig(boolean formattingEnabled, boolean requirePermiss
         }
 
         public Predicate<CommandSourceStack> partOfGroup(NameType type) {
-            return groupPermissionNodes.getOrDefault(type, List.of()).stream()
-                    .<Predicate<CommandSourceStack>>map(permission -> source -> CustomName.getPermissions().checkPermission(source, permission))
+            return parsedGroups.getOrDefault(type, List.of()).stream()
+                    .map(group -> CommonPermissions.require(group.permission, PermissionLevel.GAMEMASTERS))
                     .reduce(Predicate::or)
                     .orElse(_ -> false);
         }
 
         public SuggestionProvider<CommandSourceStack> createSuggestionsProvider(NameType nameType) {
             return (context, builder) ->
-                    SharedSuggestionProvider.suggest(validNames(context.getSource(), nameType).stream()
-                            .map(ParsedPlayerName::raw), builder);
-        }
-
-        private static String getGroupPermissionNode(NameType nameType, String group) {
-            return "group." + nameType.getSerializedName() + "." + group;
+                    SharedSuggestionProvider.suggest(validNames(context.getSource(), nameType).stream().map(ParsedPlayerName::raw), builder);
         }
 
         static {
@@ -186,6 +185,17 @@ public record CustomNameConfig(boolean formattingEnabled, boolean requirePermiss
                 empty.put(type, Map.of());
             }
             EMPTY = new CustomNameGroups(Map.copyOf(empty));
+        }
+    }
+
+    public record CustomNameGroup(CommonPermissionNode permission, List<ParsedPlayerName> allowedNames) {
+
+        public CustomNameGroup(NameType type, Map.Entry<String, List<ParsedPlayerName>> stringListEntry) {
+            this(CustomNamePermissions.createNode(getGroupPermissionNode(type, stringListEntry.getKey())), stringListEntry.getValue());
+        }
+
+        private static String getGroupPermissionNode(NameType nameType, String group) {
+            return "group." + nameType.getSerializedName() + "." + group;
         }
     }
 }

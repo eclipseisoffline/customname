@@ -18,8 +18,6 @@ public abstract class CustomName {
     private static boolean initialized = false;
     @Nullable
     private static CustomNameConfig config = null;
-    @Nullable
-    private static CustomNamePermissions permissions = null;
 
     public void initialize() {
         if (initialized) {
@@ -28,9 +26,9 @@ public abstract class CustomName {
         initialized = true;
 
         LOGGER.info("Custom Names {} initialising", getVersion());
+        CustomNamePermissions.bootstrap();
         LOGGER.info("Reading config");
         config = CustomNameConfig.readOrCreate(getConfigDir());
-        permissions = createPermissions();
 
         registerCommands(CustomNameCommands::register);
     }
@@ -39,8 +37,6 @@ public abstract class CustomName {
 
     protected abstract Path getConfigDir();
 
-    protected abstract CustomNamePermissions createPermissions();
-
     protected abstract void registerCommands(Consumer<CommandDispatcher<CommandSourceStack>> registerer);
 
     public static CustomNameConfig getConfig() {
@@ -48,13 +44,6 @@ public abstract class CustomName {
             throw new NullPointerException("CustomNameConfig was accessed before it was initialized!");
         }
         return config;
-    }
-
-    public static CustomNamePermissions getPermissions() {
-        if (permissions == null) {
-            throw new NullPointerException("CustomNamePermissions was accessed before it was initialized!");
-        }
-        return permissions;
     }
 
     public static Identifier getModdedIdentifier(String path) {

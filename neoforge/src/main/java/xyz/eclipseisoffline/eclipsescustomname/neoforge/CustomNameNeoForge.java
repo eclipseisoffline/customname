@@ -8,7 +8,6 @@ import net.neoforged.fml.loading.FMLPaths;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
 import xyz.eclipseisoffline.eclipsescustomname.CustomName;
-import xyz.eclipseisoffline.eclipsescustomname.CustomNamePermissions;
 
 import java.nio.file.Path;
 import java.util.function.Consumer;
@@ -31,11 +30,6 @@ public class CustomNameNeoForge extends CustomName {
     @Override
     protected Path getConfigDir() {
         return FMLPaths.CONFIGDIR.get();
-    }
-
-    @Override
-    protected CustomNamePermissions createPermissions() {
-        return (_,  _) -> false; // TODO
     }
 
     @Override

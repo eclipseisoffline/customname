@@ -6,7 +6,6 @@ import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.commands.CommandSourceStack;
 import xyz.eclipseisoffline.eclipsescustomname.CustomName;
-import xyz.eclipseisoffline.eclipsescustomname.CustomNamePermissions;
 
 import java.nio.file.Path;
 import java.util.function.Consumer;
@@ -26,11 +25,6 @@ public class CustomNameFabric extends CustomName implements ModInitializer {
     @Override
     protected Path getConfigDir() {
         return FabricLoader.getInstance().getConfigDir();
-    }
-
-    @Override
-    protected CustomNamePermissions createPermissions() {
-        return (_, _) -> false; // FIXME when permissions API works again
     }
 
     @Override

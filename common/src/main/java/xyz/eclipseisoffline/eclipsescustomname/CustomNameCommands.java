@@ -18,9 +18,12 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.permissions.PermissionLevel;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.ItemLore;
+import xyz.eclipseisoffline.commonpermissionsapi.api.CommonPermissionNode;
+import xyz.eclipseisoffline.commonpermissionsapi.api.CommonPermissions;
 
 import java.io.IOException;
 import java.io.StringReader;
@@ -38,7 +41,7 @@ public class CustomNameCommands {
         dispatcher.register(
                 Commands.literal(NAME_COMMAND_ROOT)
                         .then(Commands.literal("other")
-                                .requires(permissionCheck("other"))
+                                .requires(permissionCheck(CustomNamePermissions.OTHER))
                                 .then(otherPlayerNameCommand(NameType.PREFIX))
                                 .then(otherPlayerNameCommand(NameType.SUFFIX))
                                 .then(otherPlayerNameCommand(NameType.NICKNAME))
@@ -50,7 +53,7 @@ public class CustomNameCommands {
 
         dispatcher.register(
                 Commands.literal("itemname")
-                        .requires(permissionCheck("itemname")
+                        .requires(permissionCheck(CustomNamePermissions.ITEM_NAME)
                                 .and(CommandSourceStack::isPlayer)
                                 .and(_ -> CustomName.getConfig().formattingEnabled()))
                         .then(Commands.argument("name", StringArgumentType.greedyString())
@@ -85,7 +88,7 @@ public class CustomNameCommands {
 
         dispatcher.register(
                 Commands.literal("itemlore")
-                        .requires(permissionCheck("itemlore")
+                        .requires(permissionCheck(CustomNamePermissions.ITEM_LORE)
                                 .and(CommandSourceStack::isPlayer)
                                 .and(_ -> CustomName.getConfig().formattingEnabled()))
                         .then(Commands.argument("lore", StringArgumentType.greedyString())
@@ -144,7 +147,7 @@ public class CustomNameCommands {
 
     private static LiteralArgumentBuilder<CommandSourceStack> otherPlayerNameCommand(NameType nameType) {
         return Commands.literal(nameType.getSerializedName())
-                .requires(permissionCheck(nameType.getPermission()).and(permissionCheck("other")))
+                .requires(permissionCheck(nameType.getPermission()).and(permissionCheck(CustomNamePermissions.OTHER)))
                 .then(Commands.argument("player", EntityArgument.player())
                         .then(Commands.argument("name", StringArgumentType.greedyString())
                                 .executes(updatePlayerName(nameType, true))
@@ -158,7 +161,7 @@ public class CustomNameCommands {
             ServerPlayer player = other ? EntityArgument.getPlayer(context, "player") : context.getSource().getPlayerOrException();
             Component name;
 
-            boolean bypassRestrictions = CustomName.getConfig().operatorsBypassRestrictions() && checkPermission(context.getSource(), "bypass_restrictions");
+            boolean bypassRestrictions = CustomName.getConfig().operatorsBypassRestrictions() && checkPermission(context.getSource(), CustomNamePermissions.BYPASS_RESTRICTIONS);
             try {
                 name = CustomNameUtil.playerNameArgumentToComponent(StringArgumentType.getString(context, "name"), bypassRestrictions);
             } catch (IllegalArgumentException exception) {
@@ -280,11 +283,11 @@ public class CustomNameCommands {
         return strings;
     }
 
-    private static Predicate<CommandSourceStack> permissionCheck(String permission) {
-        return CustomName.getPermissions().permissionCheck(permission);
+    private static Predicate<CommandSourceStack> permissionCheck(CommonPermissionNode permission) {
+        return CommonPermissions.require(permission, PermissionLevel.GAMEMASTERS);
     }
 
-    private static boolean checkPermission(CommandSourceStack source, String permission) {
-        return CustomName.getPermissions().checkPermission(source, permission);
+    private static boolean checkPermission(CommandSourceStack source, CommonPermissionNode permission) {
+        return CommonPermissions.check(source, permission, PermissionLevel.GAMEMASTERS);
     }
 }
