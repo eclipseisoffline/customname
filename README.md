@@ -33,7 +33,7 @@ For support and/or any questions you may have, feel free to join [my discord](ht
 
 | Minecraft Version | Status       |
 |-------------------|--------------|
-| 26.1              | ✅ Current    |
+| 26.1.x            | ✅ Current    |
 | 1.21.11           | ✔️ Available |
 | 1.21.9+10         | ✔️ Available |
 | 1.21.6+7+8        | ✔️ Available |
@@ -50,7 +50,7 @@ For support and/or any questions you may have, feel free to join [my discord](ht
 I try to keep support up for the latest drop of Minecraft. Updates to newer Minecraft
 versions may be delayed from time to time, as I do not always have the time to immediately update my mods.
 
-Unsupported versions are/ still available to download, but they won't receive new features or bugfixes.
+Unsupported versions are still available to download, but they won't receive new features or bugfixes.
 
 NeoForge ports are available for Minecraft 26.1 onwards.
 

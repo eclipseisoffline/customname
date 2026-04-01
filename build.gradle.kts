@@ -25,7 +25,6 @@ multimod {
 
     minecraft {
         minecraft = libs.minecraft
-        supported(libs.versions.minecraft.release)
     }
 
     fabricApi = libs.fabric.api
