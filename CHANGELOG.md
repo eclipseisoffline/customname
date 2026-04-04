@@ -1,1 +1,2 @@
-- Mark 26.1.1 as supported.
+- Players with OP permission level 2 no longer have access to all custom name groups by default.
+- Fixed the `require_permissions` config option not functioning properly.

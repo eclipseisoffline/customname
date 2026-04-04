@@ -284,10 +284,10 @@ public class CustomNameCommands {
     }
 
     private static Predicate<CommandSourceStack> permissionCheck(CommonPermissionNode permission) {
-        return CommonPermissions.require(permission, PermissionLevel.GAMEMASTERS);
+        return CustomName.getConfig().requirePermissions() ? CommonPermissions.require(permission, PermissionLevel.GAMEMASTERS) : _ -> true;
     }
 
     private static boolean checkPermission(CommandSourceStack source, CommonPermissionNode permission) {
-        return CommonPermissions.check(source, permission, PermissionLevel.GAMEMASTERS);
+        return !CustomName.getConfig().requirePermissions() || CommonPermissions.check(source, permission, PermissionLevel.GAMEMASTERS);
     }
 }

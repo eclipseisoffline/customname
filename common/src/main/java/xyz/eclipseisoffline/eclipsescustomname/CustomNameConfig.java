@@ -30,7 +30,6 @@ import java.util.stream.Collectors;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.network.chat.Component;
-import net.minecraft.server.permissions.PermissionLevel;
 import net.minecraft.util.ExtraCodecs;
 import net.minecraft.world.entity.Display;
 import xyz.eclipseisoffline.commonpermissionsapi.api.CommonPermissionNode;
@@ -152,7 +151,7 @@ public record CustomNameConfig(boolean formattingEnabled, boolean requirePermiss
 
             List<ParsedPlayerName> names = new ArrayList<>();
             for (CustomNameGroup group : groups) {
-                if (CommonPermissions.check(source, group.permission, PermissionLevel.GAMEMASTERS)) {
+                if (CommonPermissions.check(source, group.permission)) {
                     names.addAll(group.allowedNames);
                 }
             }
@@ -168,7 +167,7 @@ public record CustomNameConfig(boolean formattingEnabled, boolean requirePermiss
 
         public Predicate<CommandSourceStack> partOfGroup(NameType type) {
             return parsedGroups.getOrDefault(type, List.of()).stream()
-                    .map(group -> CommonPermissions.require(group.permission, PermissionLevel.GAMEMASTERS))
+                    .map(group -> CommonPermissions.require(group.permission))
                     .reduce(Predicate::or)
                     .orElse(_ -> false);
         }
