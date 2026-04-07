@@ -7,6 +7,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 import com.google.gson.Strictness;
 import com.google.gson.stream.JsonReader;
@@ -19,6 +21,7 @@ import com.mojang.serialization.JsonOps;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.luckperms.api.LuckPerms;
 import net.luckperms.api.LuckPermsProvider;
+import net.luckperms.api.cacheddata.CachedMetaData;
 import net.luckperms.api.event.user.UserDataRecalculateEvent;
 import net.luckperms.api.model.user.User;
 import net.minecraft.commands.CommandSourceStack;
@@ -97,18 +100,17 @@ public class PlayerNameManager extends SavedData {
     }
 
     public void updatePlayerName(ServerPlayer player, @Nullable Component name, NameType type) {
+        Map<UUID, Component> nameTypeMap = switch (type) {
+            case PREFIX -> playerPrefixes;
+            case SUFFIX -> playerSuffixes;
+            case NICKNAME -> playerNicknames;
+            default -> throw new IllegalArgumentException("Unsupported name type " + type);
+        };
+
         if (name == null) {
-            switch (type) {
-                case PREFIX -> playerPrefixes.remove(player.getUUID());
-                case SUFFIX -> playerSuffixes.remove(player.getUUID());
-                case NICKNAME -> playerNicknames.remove(player.getUUID());
-            }
+            nameTypeMap.remove(player.getUUID());
         } else {
-            switch (type) {
-                case PREFIX -> playerPrefixes.put(player.getUUID(), name);
-                case SUFFIX -> playerSuffixes.put(player.getUUID(), name);
-                case NICKNAME -> playerNicknames.put(player.getUUID(), name);
-            }
+            nameTypeMap.put(player.getUUID(), name);
         }
         markDirty(player);
     }
@@ -120,11 +122,13 @@ public class PlayerNameManager extends SavedData {
         return fullPlayerNames.get(player.getUUID());
     }
 
-    public Component getPlayerName(ServerPlayer player, NameType nameType) {
+    public @Nullable Component getPlayerName(ServerPlayer player, NameType nameType) {
         return switch (nameType) {
             case PREFIX -> playerPrefixes.get(player.getUUID());
             case SUFFIX -> playerSuffixes.get(player.getUUID());
             case NICKNAME -> playerNicknames.getOrDefault(player.getUUID(), player.getName());
+            case LUCKPERMS_PREFIX -> supplyWithLuckPerms(() -> parseLuckPermsName(player.getUUID(), CachedMetaData::getPrefix));
+            case LUCKPERMS_SUFFIX -> supplyWithLuckPerms(() -> parseLuckPermsName(player.getUUID(), CachedMetaData::getSuffix));
         };
     }
 
@@ -134,42 +138,58 @@ public class PlayerNameManager extends SavedData {
     }
 
     private void updateFullPlayerName(ServerPlayer player) {
-        String permissionsPrefix = null;
-        String permissionsSuffix = null;
+        Component prefix = getPlayerName(player, NameType.PREFIX);
+        Component suffix = getPlayerName(player, NameType.SUFFIX);
+        Component nickname = getPlayerName(player, NameType.NICKNAME);
+        Component luckPermsPrefix = getPlayerName(player, NameType.LUCKPERMS_PREFIX);
+        Component luckPermsSuffix = getPlayerName(player, NameType.LUCKPERMS_SUFFIX);
 
-        if (luckPerms != null) {
-            User luckPermsUser = luckPerms.getUserManager().getUser(player.getUUID());
-            if (luckPermsUser != null) {
-                permissionsPrefix = luckPermsUser.getCachedData().getMetaData().getPrefix();
-                permissionsSuffix = luckPermsUser.getCachedData().getMetaData().getSuffix();
-            }
-        }
-
-        Component prefix = playerPrefixes.get(player.getUUID());
-        Component suffix = playerSuffixes.get(player.getUUID());
-        Component nickname = playerNicknames.get(player.getUUID());
-
-        MutableComponent name = Component.literal("");
-        if (permissionsPrefix != null) {
-            name.append(CustomNameUtil.playerNameArgumentToComponent(permissionsPrefix, true));
+        MutableComponent name = Component.empty();
+        if (luckPermsPrefix != null) {
+            name.append(luckPermsPrefix);
             name.append(" ");
         }
         if (prefix != null) {
             name.append(prefix);
             name.append(" ");
         }
-        name.append(Objects.requireNonNullElseGet(nickname, player::getName));
+        name.append(Objects.requireNonNull(nickname));
         if (suffix != null) {
             name.append(" ");
             name.append(suffix);
         }
-        if (permissionsSuffix != null) {
+        if (luckPermsSuffix != null) {
             name.append(" ");
-            name.append(CustomNameUtil.playerNameArgumentToComponent(permissionsSuffix, true));
+            name.append(luckPermsSuffix);
         }
 
         fullPlayerNames.put(player.getUUID(), name);
         ((FakeTextDisplayHolder) player).customName$updateName(false);
+    }
+
+    private @Nullable Component parseLuckPermsName(UUID uuid, Function<CachedMetaData, @Nullable String> getter) {
+        return getLuckPermsMeta(uuid, getter.andThen(string -> {
+            if (string == null) {
+                return null;
+            }
+            return CustomNameUtil.playerNameArgumentToComponent(string, true);
+        }));
+    }
+
+    private <T> @Nullable T getLuckPermsMeta(UUID uuid, Function<CachedMetaData, @Nullable T> getter) {
+        assert luckPerms != null;
+        User luckPermsUser = luckPerms.getUserManager().getUser(uuid);
+        if (luckPermsUser != null) {
+            return getter.apply(luckPermsUser.getCachedData().getMetaData());
+        }
+        return null;
+    }
+
+    private <T> @Nullable T supplyWithLuckPerms(Supplier<@Nullable T> supplier) {
+        if (luckPerms != null) {
+            return supplier.get();
+        }
+        return null;
     }
 
     private static SavedDataType<PlayerNameManager> type(MinecraftServer server) {

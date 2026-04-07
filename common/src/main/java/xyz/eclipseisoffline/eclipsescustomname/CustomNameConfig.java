@@ -28,6 +28,7 @@ import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.SharedSuggestionProvider;
@@ -127,14 +128,15 @@ public record CustomNameConfig(boolean formattingEnabled, boolean requirePermiss
     }
 
     public record CustomNameDisplayLine(List<NameType> names) {
-        public static final CustomNameDisplayLine DEFAULT = new CustomNameDisplayLine(List.of(NameType.values()));
+        public static final CustomNameDisplayLine DEFAULT = new CustomNameDisplayLine(
+                List.of(NameType.LUCKPERMS_PREFIX, NameType.PREFIX, NameType.NICKNAME, NameType.SUFFIX, NameType.LUCKPERMS_SUFFIX));
         public static final Codec<CustomNameDisplayLine> CODEC = Codec.STRING.comapFlatMap(CustomNameDisplayLine::parse, CustomNameDisplayLine::toString);
 
         public static DataResult<CustomNameDisplayLine> parse(String raw) {
-            DataResult<List<NameType>> names = DataResult.success(new ArrayList<>());
+            DataResult<List<NameType>> names = DataResult.success(List.of());
             String[] split = raw.split(" ");
             for (String name : split) {
-                names.apply2(List::add, NameType.CODEC.parse(JavaOps.INSTANCE, name));
+                names = names.apply2((list, parsed) -> Stream.concat(list.stream(), Stream.of(parsed)).toList(), NameType.CODEC.parse(JavaOps.INSTANCE, name));
             }
             return names.map(Collections::unmodifiableList).map(CustomNameDisplayLine::new);
         }
