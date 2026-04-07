@@ -1,2 +1,2 @@
-- Players with OP permission level 2 no longer have access to all custom name groups by default.
-- Fixed the `require_permissions` config option not functioning properly.
+- Added a `lines` option to the `display_above_player` option, controls the lines shown above a player's head.
+  - You can use this option to customise on which lines which name types are displayed. By default, all name types are displayed on a single line.

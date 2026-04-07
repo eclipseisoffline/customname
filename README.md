@@ -13,7 +13,10 @@ This mod adds a `/name`, a `/itemname` and a `/itemlore` command to Minecraft, w
 or give their items colourful names and lore. Mostly designed to be used in small, private servers, although through the
 use of name groups you can also limit which players can use which prefixes/suffixes/nicknames.
 
-Supports prefixes/suffixes set with LuckPerms as well! 
+Optionally, the mod also has a feature to display custom names in-game, above a player's head. This also features options
+to customise the style (background colour and text opacity), as well as customising the lines of text shown.
+
+Supports prefixes/suffixes set with LuckPerms as well!
 
 Feel free to report any bugs, or suggest new features, at the issue tracker.
 
@@ -104,7 +107,10 @@ By default, the configuration file looks like this:
   "display_above_player": {
     "enabled": false,
     "text_opacity": 255,
-    "background_color": "#40000000"
+    "background_color": "#40000000",
+    "lines": [
+      "luckperms_prefix prefix nickname suffix luckperms_suffix"
+    ]
   },
   "name_groups": {
     "prefix": {},
@@ -122,6 +128,7 @@ By default, the configuration file looks like this:
 - `display_above_player` controls whether the player's custom name should display above their head in game. This is currently not compatible with hiding name tags using teams. The appearance can be further configured using the following options:
   - `text_opacity`: controls the opacity of the text. `255` is fully visible, `0` is transparent.
   - `background_color`: the HEX-background colour of the name. This is in ARGB format, so the first 2 digits indicate the alpha value.
+  - `lines`: controls the lines shown above a player's head. You can use this option to customise on which lines which name types are displayed. By default, all name types are displayed on a single line. All possible name types are listed in the example above.
 - `name_groups` can be used to create name groups for each name type. Name groups consist of a list of names, which follow the same format used in name commands. You can assign players to one or more name groups by giving them permissions to the respective groups. They will then be able to use names listed in those groups.
 
 For example, consider this name groups config:
