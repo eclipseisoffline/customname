@@ -108,7 +108,10 @@ public record CustomNameConfig(boolean formattingEnabled, boolean requirePermiss
     }
 
     private static <T> MapCodec<T> fallbackIfMissing(Codec<T> codec, String name, T fallback) {
-        return codec.optionalFieldOf(name).xmap(optional -> optional.orElse(fallback), Optional::of);
+        return codec.optionalFieldOf(name).xmap(optional -> optional.orElseGet(() -> {
+            CustomName.LOGGER.info("Using default value for field {} as it was not present in the existing config file", name);
+            return fallback;
+        }), Optional::of);
     }
 
     public record CustomNameDisplaySettings(boolean enabled, int textOpacity, int backgroundColor, List<CustomNameDisplayLine> lines) {
