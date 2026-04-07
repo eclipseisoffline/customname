@@ -22,6 +22,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 import org.joml.Vector3f;
+import org.jspecify.annotations.Nullable;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -61,6 +62,8 @@ public abstract class ServerPlayerMixin extends Player implements FakeTextDispla
     private int[] customName$fakeTextDisplayIds = new int[0];
     @Unique
     private UUID[] customName$fakeTextDisplayUuids = new UUID[0];
+    @Unique
+    private @Nullable Component customName$cachedDisplayPlayerName = null;
 
     public ServerPlayerMixin(Level level, GameProfile profile) {
         super(level, profile);
@@ -87,7 +90,7 @@ public abstract class ServerPlayerMixin extends Player implements FakeTextDispla
 
             customName$broadcastTextDisplayData(BACKGROUND_TEXT, List.of(SynchedEntityData.DataValue.create(DisplayAccessor.TextDisplayAccessor.getDataStyleFlagsId(), flags)));
             customName$broadcastTextDisplayData(FOREGROUND_TEXT, List.of(SynchedEntityData.DataValue.create(DisplayAccessor.TextDisplayAccessor.getDataTextId(),
-                    customName$displayNameText(newInput, true))));
+                    customName$displayNameText(newInput, true, true))));
         }
     }
 
@@ -95,7 +98,7 @@ public abstract class ServerPlayerMixin extends Player implements FakeTextDispla
     public void customName$setSharedFlag(int index, boolean value) {
         // Invisible flag
         if (customName$fakeTextDisplayIds.length > 0 && index == 5) {
-            customName$updateName();
+            customName$updateName(true);
         }
     }
 
@@ -112,7 +115,7 @@ public abstract class ServerPlayerMixin extends Player implements FakeTextDispla
             byte coveredTextOpacity = (byte) (CustomName.getConfig().displaySettings().textOpacity() / 2);
 
             player.connection.send(new ClientboundSetEntityDataPacket(customName$fakeTextDisplayIds[BACKGROUND_TEXT],
-                    List.of(SynchedEntityData.DataValue.create(DisplayAccessor.TextDisplayAccessor.getDataTextId(), customName$displayNameText(lastClientInput, false)),
+                    List.of(SynchedEntityData.DataValue.create(DisplayAccessor.TextDisplayAccessor.getDataTextId(), customName$displayNameText(lastClientInput, false, true)),
                             SynchedEntityData.DataValue.create(DisplayAccessor.getDataTranslationId(), new Vector3f(0.0F, 0.2F, 0.0F)),
                             SynchedEntityData.DataValue.create(DisplayAccessor.getDataBillboardRenderConstraintsId(), (byte) 3), // Centre billboard
                             SynchedEntityData.DataValue.create(DisplayAccessor.TextDisplayAccessor.getDataTextOpacityId(), coveredTextOpacity),
@@ -120,7 +123,7 @@ public abstract class ServerPlayerMixin extends Player implements FakeTextDispla
                             SynchedEntityData.DataValue.create(DisplayAccessor.TextDisplayAccessor.getDataBackgroundColorId(), CustomName.getConfig().displaySettings().backgroundColor()))));
 
             player.connection.send(new ClientboundSetEntityDataPacket(customName$fakeTextDisplayIds[FOREGROUND_TEXT],
-                    List.of(SynchedEntityData.DataValue.create(DisplayAccessor.TextDisplayAccessor.getDataTextId(), customName$displayNameText(lastClientInput, true)),
+                    List.of(SynchedEntityData.DataValue.create(DisplayAccessor.TextDisplayAccessor.getDataTextId(), customName$displayNameText(lastClientInput, true, true)),
                             SynchedEntityData.DataValue.create(DisplayAccessor.getDataTranslationId(), new Vector3f(0.0F, 0.2F, 0.0F)),
                             SynchedEntityData.DataValue.create(DisplayAccessor.getDataBillboardRenderConstraintsId(), (byte) 3), // Centre billboard
                             SynchedEntityData.DataValue.create(DisplayAccessor.TextDisplayAccessor.getDataTextOpacityId(), defaultTextOpacity),
@@ -136,10 +139,10 @@ public abstract class ServerPlayerMixin extends Player implements FakeTextDispla
     }
 
     @Override
-    public void customName$updateName() {
+    public void customName$updateName(boolean useCache) {
         if (customName$fakeTextDisplayIds.length > 0) {
             List<SynchedEntityData.DataValue<?>> newData = List.of(SynchedEntityData.DataValue.create(DisplayAccessor.TextDisplayAccessor.getDataTextId(),
-                    customName$displayNameText(lastClientInput, false)));
+                    customName$displayNameText(lastClientInput, false, useCache)));
             customName$broadcastTextDisplayData(BACKGROUND_TEXT, newData);
             customName$broadcastTextDisplayData(FOREGROUND_TEXT, newData);
         }
@@ -151,11 +154,18 @@ public abstract class ServerPlayerMixin extends Player implements FakeTextDispla
     }
 
     @Unique
-    private Component customName$displayNameText(Input input, boolean disappearWhenSneaking) {
+    private Component customName$displayNameText(Input input, boolean disappearWhenSneaking, boolean useCache) {
         if (isInvisible() || (input.shift() && disappearWhenSneaking)) {
             return Component.empty();
+        } else if (customName$cachedDisplayPlayerName == null || !useCache) {
+            customName$cachedDisplayPlayerName = customName$computePlayerNameForDisplay();
         }
 
+        return customName$cachedDisplayPlayerName;
+    }
+
+    @Unique
+    private Component customName$computePlayerNameForDisplay() {
         PlayerNameManager nameManager = PlayerNameManager.getPlayerNameManager(server);
         List<CustomNameConfig.CustomNameDisplayLine> lines = CustomName.getConfig().displaySettings().lines();
         List<Component> componentLines = new ArrayList<>();

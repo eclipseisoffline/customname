@@ -169,7 +169,7 @@ public class PlayerNameManager extends SavedData {
         }
 
         fullPlayerNames.put(player.getUUID(), name);
-        ((FakeTextDisplayHolder) player).customName$updateName();
+        ((FakeTextDisplayHolder) player).customName$updateName(false);
     }
 
     private static SavedDataType<PlayerNameManager> type(MinecraftServer server) {
