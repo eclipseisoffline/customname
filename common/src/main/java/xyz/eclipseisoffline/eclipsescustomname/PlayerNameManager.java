@@ -32,6 +32,7 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.saveddata.SavedData;
 import net.minecraft.world.level.saveddata.SavedDataType;
+import org.jspecify.annotations.Nullable;
 import xyz.eclipseisoffline.eclipsescustomname.network.FakeTextDisplayHolder;
 
 public class PlayerNameManager extends SavedData {
@@ -66,7 +67,7 @@ public class PlayerNameManager extends SavedData {
     private final Map<UUID, Component> playerSuffixes = new HashMap<>();
     private final Map<UUID, Component> playerNicknames = new HashMap<>();
     private final Map<UUID, Component> fullPlayerNames = new HashMap<>();
-    private final LuckPerms luckPerms;
+    private final @Nullable LuckPerms luckPerms;
 
     private PlayerNameManager(MinecraftServer server, Map<UUID, Component> prefixes, Map<UUID, Component> nicknames, Map<UUID, Component> suffixes) {
         this.playerPrefixes.putAll(prefixes);
@@ -95,7 +96,7 @@ public class PlayerNameManager extends SavedData {
         CustomName.LOGGER.info("Creating player name mappings - LuckPerms {}!", luckPermsState);
     }
 
-    public void updatePlayerName(ServerPlayer player, Component name, NameType type) {
+    public void updatePlayerName(ServerPlayer player, @Nullable Component name, NameType type) {
         if (name == null) {
             switch (type) {
                 case PREFIX -> playerPrefixes.remove(player.getUUID());
@@ -123,7 +124,7 @@ public class PlayerNameManager extends SavedData {
         return switch (nameType) {
             case PREFIX -> playerPrefixes.get(player.getUUID());
             case SUFFIX -> playerSuffixes.get(player.getUUID());
-            case NICKNAME -> playerNicknames.get(player.getUUID());
+            case NICKNAME -> playerNicknames.getOrDefault(player.getUUID(), player.getName());
         };
     }
 

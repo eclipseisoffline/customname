@@ -8,6 +8,7 @@ import com.mojang.brigadier.suggestion.SuggestionProvider;
 import com.mojang.datafixers.util.Pair;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
+import com.mojang.serialization.JavaOps;
 import com.mojang.serialization.JsonOps;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
@@ -19,6 +20,7 @@ import java.io.Writer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -108,17 +110,39 @@ public record CustomNameConfig(boolean formattingEnabled, boolean requirePermiss
         return codec.optionalFieldOf(name).xmap(optional -> optional.orElse(fallback), Optional::of);
     }
 
-    public record CustomNameDisplaySettings(boolean enabled, int textOpacity, int backgroundColor) {
-        public static final CustomNameDisplaySettings DEFAULT = new CustomNameDisplaySettings(false, 255, Display.TextDisplay.INITIAL_BACKGROUND);
+    public record CustomNameDisplaySettings(boolean enabled, int textOpacity, int backgroundColor, List<CustomNameDisplayLine> lines) {
+        public static final CustomNameDisplaySettings DEFAULT = new CustomNameDisplaySettings(false, 255,
+                Display.TextDisplay.INITIAL_BACKGROUND, List.of(CustomNameDisplayLine.DEFAULT));
         public static final Codec<CustomNameDisplaySettings> CODEC = RecordCodecBuilder.create(instance ->
                 instance.group(
                         Codec.BOOL.fieldOf("enabled").forGetter(CustomNameDisplaySettings::enabled),
                         Codec.intRange(0, 255).fieldOf("text_opacity").forGetter(CustomNameDisplaySettings::textOpacity),
-                        ExtraCodecs.STRING_ARGB_COLOR.fieldOf("background_color").forGetter(CustomNameDisplaySettings::backgroundColor)
+                        ExtraCodecs.STRING_ARGB_COLOR.fieldOf("background_color").forGetter(CustomNameDisplaySettings::backgroundColor),
+                        fallbackIfMissing(ExtraCodecs.nonEmptyList(CustomNameDisplayLine.CODEC.listOf()), "lines", List.of(CustomNameDisplayLine.DEFAULT))
+                                .forGetter(CustomNameDisplaySettings::lines)
                 ).apply(instance, CustomNameDisplaySettings::new)
         );
         public static final Codec<CustomNameDisplaySettings> CODEC_WITH_LEGACY_ALTERNATIVE = Codec.withAlternative(CODEC, Codec.BOOL,
-                enabled -> new CustomNameDisplaySettings(enabled, DEFAULT.textOpacity, DEFAULT.backgroundColor));
+                enabled -> new CustomNameDisplaySettings(enabled, DEFAULT.textOpacity, DEFAULT.backgroundColor, DEFAULT.lines));
+    }
+
+    public record CustomNameDisplayLine(List<NameType> names) {
+        public static final CustomNameDisplayLine DEFAULT = new CustomNameDisplayLine(List.of(NameType.values()));
+        public static final Codec<CustomNameDisplayLine> CODEC = Codec.STRING.comapFlatMap(CustomNameDisplayLine::parse, CustomNameDisplayLine::toString);
+
+        public static DataResult<CustomNameDisplayLine> parse(String raw) {
+            DataResult<List<NameType>> names = DataResult.success(new ArrayList<>());
+            String[] split = raw.split(" ");
+            for (String name : split) {
+                names.apply2(List::add, NameType.CODEC.parse(JavaOps.INSTANCE, name));
+            }
+            return names.map(Collections::unmodifiableList).map(CustomNameDisplayLine::new);
+        }
+
+        @Override
+        public String toString() {
+            return names.stream().map(NameType::getSerializedName).collect(Collectors.joining(" "));
+        }
     }
 
     // TODO Structure a bit messy here, maybe rework the codecs later

@@ -1,7 +1,10 @@
 package xyz.eclipseisoffline.eclipsescustomname.mixin.entity;
 
 import com.mojang.authlib.GameProfile;
+import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.ComponentUtils;
+import net.minecraft.network.chat.contents.PlainTextContents;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientGamePacketListener;
 import net.minecraft.network.protocol.game.ClientboundAddEntityPacket;
@@ -19,6 +22,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 import org.joml.Vector3f;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -27,9 +31,13 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import xyz.eclipseisoffline.eclipsescustomname.CustomName;
+import xyz.eclipseisoffline.eclipsescustomname.CustomNameConfig;
+import xyz.eclipseisoffline.eclipsescustomname.NameType;
+import xyz.eclipseisoffline.eclipsescustomname.PlayerNameManager;
 import xyz.eclipseisoffline.eclipsescustomname.entity.ServerPlayerOverrides;
 import xyz.eclipseisoffline.eclipsescustomname.network.FakeTextDisplayHolder;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -46,6 +54,9 @@ public abstract class ServerPlayerMixin extends Player implements FakeTextDispla
     @Shadow
     public abstract ServerLevel level();
 
+    @Shadow
+    @Final
+    private MinecraftServer server;
     @Unique
     private int[] customName$fakeTextDisplayIds = new int[0];
     @Unique
@@ -75,7 +86,7 @@ public abstract class ServerPlayerMixin extends Player implements FakeTextDispla
             byte flags = (byte) (newInput.shift() ? 0 : 1 << 1); // See through blocks when not sneaking
 
             customName$broadcastTextDisplayData(BACKGROUND_TEXT, List.of(SynchedEntityData.DataValue.create(DisplayAccessor.TextDisplayAccessor.getDataStyleFlagsId(), flags)));
-            customName$broadcastTextDisplayData(customName$fakeTextDisplayIds[1], List.of(SynchedEntityData.DataValue.create(DisplayAccessor.TextDisplayAccessor.getDataTextId(),
+            customName$broadcastTextDisplayData(FOREGROUND_TEXT, List.of(SynchedEntityData.DataValue.create(DisplayAccessor.TextDisplayAccessor.getDataTextId(),
                     customName$displayNameText(newInput, true))));
         }
     }
@@ -141,7 +152,27 @@ public abstract class ServerPlayerMixin extends Player implements FakeTextDispla
 
     @Unique
     private Component customName$displayNameText(Input input, boolean disappearWhenSneaking) {
-        return isInvisible() || (input.shift() && disappearWhenSneaking) ? Component.empty() : getDisplayName();
+        if (isInvisible() || (input.shift() && disappearWhenSneaking)) {
+            return Component.empty();
+        }
+
+        PlayerNameManager nameManager = PlayerNameManager.getPlayerNameManager(server);
+        List<CustomNameConfig.CustomNameDisplayLine> lines = CustomName.getConfig().displaySettings().lines();
+        List<Component> componentLines = new ArrayList<>();
+        for (CustomNameConfig.CustomNameDisplayLine line : lines) {
+            List<Component> names = new ArrayList<>();
+            for (NameType type : line.names()) {
+                Component name = nameManager.getPlayerName((ServerPlayer) (Object) this, type);
+                if (name != null) {
+                    names.add(name);
+                }
+            }
+            Component joinedNames = ComponentUtils.formatList(names, Component.literal(" "));
+            if (!joinedNames.getSiblings().isEmpty() || joinedNames.getContents() != PlainTextContents.EMPTY) {
+                componentLines.add(joinedNames);
+            }
+        }
+        return CommonComponents.joinLines(componentLines);
     }
 
     @Unique
