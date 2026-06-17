@@ -16,7 +16,7 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ClientInformation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.player.Input;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
@@ -73,7 +73,7 @@ public abstract class ServerPlayerMixin extends Player implements FakeTextDispla
     public void initFakeTextDisplay(MinecraftServer server, ServerLevel level, GameProfile profile, ClientInformation clientInformation,
                                     CallbackInfo callbackInfo) {
         if (CustomName.getConfig().displaySettings().enabled()) {
-            customName$fakeTextDisplayIds = new int[]{EntityAccessor.getEntityCounter().incrementAndGet(), EntityAccessor.getEntityCounter().incrementAndGet()};
+            customName$fakeTextDisplayIds = new int[]{level.getNextEntityId(), level.getNextEntityId()};
             customName$fakeTextDisplayUuids = new UUID[]{UUID.randomUUID(), UUID.randomUUID()};
         }
     }
@@ -106,9 +106,9 @@ public abstract class ServerPlayerMixin extends Player implements FakeTextDispla
     public void customName$startSeenByPlayer(ServerPlayer player) {
         if (customName$fakeTextDisplayIds.length > 0) {
             player.connection.send(new ClientboundAddEntityPacket(customName$fakeTextDisplayIds[0], customName$fakeTextDisplayUuids[0], getX(), getY(), getZ(),
-                    0.0F, 0.0F, EntityType.TEXT_DISPLAY, 0, Vec3.ZERO, 0.0));
+                    0.0F, 0.0F, EntityTypes.TEXT_DISPLAY, 0, Vec3.ZERO, 0.0));
             player.connection.send(new ClientboundAddEntityPacket(customName$fakeTextDisplayIds[1], customName$fakeTextDisplayUuids[1], getX(), getY(), getZ(),
-                    0.0F, 0.0F, EntityType.TEXT_DISPLAY, 0, Vec3.ZERO, 0.0));
+                    0.0F, 0.0F, EntityTypes.TEXT_DISPLAY, 0, Vec3.ZERO, 0.0));
             player.connection.send(new ClientboundSetPassengersPacket(this)); // Text display passenger is added through mixin in network handler to increase compatibility with other mods
 
             byte defaultTextOpacity = (byte) CustomName.getConfig().displaySettings().textOpacity();

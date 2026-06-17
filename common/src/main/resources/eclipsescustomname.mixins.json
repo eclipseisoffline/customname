@@ -6,7 +6,6 @@
   "mixins": [
     "entity.DisplayAccessor",
     "entity.DisplayAccessor$TextDisplayAccessor",
-    "entity.EntityAccessor",
     "entity.EntityMixin",
     "entity.PlayerMixin",
     "entity.ServerPlayerMixin",

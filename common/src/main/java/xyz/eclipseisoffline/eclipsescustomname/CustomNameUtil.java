@@ -99,7 +99,8 @@ public class CustomNameUtil {
                             throw new IllegalArgumentException("Invalid formatting code");
                         }
 
-                        if (newStyle.isColor() || newStyle == ChatFormatting.RESET || !wasFormatting) {
+                        // first condition is checking for colour
+                        if (newStyle.ordinal() < ChatFormatting.OBFUSCATED.ordinal() || newStyle == ChatFormatting.RESET || !wasFormatting) {
                             if (!currentText.isEmpty()) {
                                 complete.append(Component.literal(currentText.toString()).setStyle(currentStyle));
                             }
