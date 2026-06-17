@@ -13,7 +13,7 @@ import xyz.eclipseisoffline.eclipsescustomname.CustomName;
 public abstract class ClientboundSetPlayerTeamPacketParametersMixin {
 
     @WrapOperation(method = "<init>(Lnet/minecraft/world/scores/PlayerTeam;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/scores/PlayerTeam;getNameTagVisibility()Lnet/minecraft/world/scores/Team$Visibility;"))
-    public Team.Visibility returnNeverIfUsingCustomNames(PlayerTeam instance, Operation<Team.Visibility> original) {
+    private static Team.Visibility returnNeverIfUsingCustomNames(PlayerTeam instance, Operation<Team.Visibility> original) {
         if (CustomName.getConfig().displaySettings().enabled()) {
             return Team.Visibility.NEVER;
         }
