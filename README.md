@@ -93,6 +93,26 @@ Usage of formatting codes in names can be disabled in the config file.
 
 Alongside the `/name` command, this mod also supports reading prefixes and suffixes from the LuckPerms mod.
 
+## API
+
+Other Fabric or NeoForge mods can read names managed by Custom Names through `CustomNameApi`:
+
+```java
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
+import xyz.eclipseisoffline.eclipsescustomname.api.CustomNameApi;
+
+Component prefix = CustomNameApi.getPrefix(player);
+Component nickname = CustomNameApi.getNickname(player);
+Component displayNickname = CustomNameApi.getDisplayNickname(player);
+Component suffix = CustomNameApi.getSuffix(player);
+Component fullName = CustomNameApi.getFullName(player);
+```
+
+`getPrefix`, `getNickname`, and `getSuffix` return `null` when that Custom Names value is not set. `getDisplayNickname`
+falls back to the player's vanilla name, and `getFullName` returns the complete display name used by Custom Names.
+LuckPerms names can be read with `getLuckPermsPrefix` and `getLuckPermsSuffix`.
+
 ## Config file
 
 The mod's configuration file is present in `{root config directory}/eclipsescustomname.json`.
