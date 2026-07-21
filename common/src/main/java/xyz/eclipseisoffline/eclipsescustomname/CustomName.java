@@ -30,12 +30,16 @@ public abstract class CustomName {
         LOGGER.info("Reading config");
         config = CustomNameConfig.readOrCreate(getConfigDir());
 
+        registerPlatformIntegrations();
         registerCommands(CustomNameCommands::register);
     }
 
     protected abstract String getVersion();
 
     protected abstract Path getConfigDir();
+
+    protected void registerPlatformIntegrations() {
+    }
 
     protected abstract void registerCommands(Consumer<CommandDispatcher<CommandSourceStack>> registerer);
 

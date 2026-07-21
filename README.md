@@ -113,6 +113,10 @@ Component fullName = CustomNameApi.getFullName(player);
 falls back to the player's vanilla name, and `getFullName` returns the complete display name used by Custom Names.
 LuckPerms names can be read with `getLuckPermsPrefix` and `getLuckPermsSuffix`.
 
+On Fabric, if [Patbox's Placeholder API](https://modrinth.com/mod/placeholder-api) is installed, Custom Names also registers these player placeholders:
+`%eclipsescustomname:prefix%`, `%eclipsescustomname:nickname%`, `%eclipsescustomname:suffix%`,
+`%eclipsescustomname:luckperms_prefix%`, `%eclipsescustomname:luckperms_suffix%`, and `%eclipsescustomname:full_name%`.
+
 ## Config file
 
 The mod's configuration file is present in `{root config directory}/eclipsescustomname.json`.
