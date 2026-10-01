@@ -6,7 +6,7 @@ modId="${mod_id}"
 version="${version}"
 displayName="${mod_name}"
 displayURL="https://modrinth.com/mod/${modrinth_id}"
-logoFile="assets/${mod_id}/icon.png"
+iconFile ="assets/${mod_id}/icon.png"
 authors="eclipseisoffline"
 description='''${mod_description}'''
 

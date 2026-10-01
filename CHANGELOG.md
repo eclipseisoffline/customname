@@ -1,1 +1,1 @@
-- Fixed a crash.
+- Updated to 26.3
