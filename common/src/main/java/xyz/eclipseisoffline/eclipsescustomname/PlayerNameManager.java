@@ -115,6 +115,15 @@ public class PlayerNameManager extends SavedData {
         markDirty(player);
     }
 
+    public @Nullable Component getCustomPlayerName(ServerPlayer player, NameType nameType) {
+        return switch (nameType) {
+            case PREFIX -> playerPrefixes.get(player.getUUID());
+            case SUFFIX -> playerSuffixes.get(player.getUUID());
+            case NICKNAME -> playerNicknames.get(player.getUUID());
+            default -> throw new IllegalArgumentException("Unsupported custom name type " + nameType);
+        };
+    }
+
     public Component getFullPlayerName(ServerPlayer player) {
         if (!fullPlayerNames.containsKey(player.getUUID())) {
             updateFullPlayerName(player);
@@ -209,5 +218,9 @@ public class PlayerNameManager extends SavedData {
 
     public static PlayerNameManager getPlayerNameManager(CommandSourceStack source) {
         return getPlayerNameManager(source.getServer());
+    }
+
+    public static PlayerNameManager getInstance(ServerPlayer player) {
+        return getPlayerNameManager(player.level().getServer());
     }
 }

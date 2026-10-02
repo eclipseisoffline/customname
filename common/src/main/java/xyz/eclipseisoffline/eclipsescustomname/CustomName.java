@@ -31,6 +31,7 @@ public abstract class CustomName {
         config = CustomNameConfig.readOrCreate(getConfigDir());
 
         registerCommands(CustomNameCommands::register);
+        registerPlatformIntegrations();
     }
 
     protected abstract String getVersion();
@@ -38,6 +39,8 @@ public abstract class CustomName {
     protected abstract Path getConfigDir();
 
     protected abstract void registerCommands(Consumer<CommandDispatcher<CommandSourceStack>> registerer);
+
+    protected void registerPlatformIntegrations() {}
 
     public static CustomNameConfig getConfig() {
         if (config == null) {

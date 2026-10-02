@@ -11,4 +11,8 @@ multimod.modPublishing {
     }
 }
 
+dependencies {
+    compileOnly(libs.placeholder.api)
+}
+
 multimod.fabric(project(":common"))
