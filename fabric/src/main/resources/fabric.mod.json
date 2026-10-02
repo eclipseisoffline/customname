@@ -39,7 +39,8 @@
     "commonpermissionsapi": "*"
   },
   "suggests": {
-    "luckperms": "*"
+    "luckperms": "*",
+    "placeholder-api": "*"
   },
   "custom": {
     "modmenu": {

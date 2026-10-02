@@ -18,6 +18,10 @@ multimod {
                 name = "eclipseisoffline"
                 url = uri("https://maven.eclipseisoffline.xyz/releases")
             }
+            maven {
+                name = "Nucleoid"
+                url = uri("https://maven.nucleoid.xyz")
+            }
         }
     }
 
