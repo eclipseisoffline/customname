@@ -1,1 +1,3 @@
-- Updated to 26.3
+- Updated to 26.3 (@Sheltor8).
+- Add basic API (@Serendisand).
+- Add support for Placeholder API on Fabric (@Serendisand).
