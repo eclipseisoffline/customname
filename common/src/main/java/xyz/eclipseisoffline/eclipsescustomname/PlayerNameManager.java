@@ -219,4 +219,8 @@ public class PlayerNameManager extends SavedData {
     public static PlayerNameManager getPlayerNameManager(CommandSourceStack source) {
         return getPlayerNameManager(source.getServer());
     }
+
+    public static PlayerNameManager getInstance(ServerPlayer player) {
+        return getPlayerNameManager(player.level().getServer());
+    }
 }

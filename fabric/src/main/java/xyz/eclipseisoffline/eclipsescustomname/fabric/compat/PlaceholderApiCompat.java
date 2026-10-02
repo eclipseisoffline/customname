@@ -1,4 +1,4 @@
-package xyz.eclipseisoffline.eclipsescustomname.compat;
+package xyz.eclipseisoffline.eclipsescustomname.fabric.compat;
 
 import eu.pb4.placeholders.api.PlaceholderResult;
 import eu.pb4.placeholders.api.Placeholders;

@@ -36,7 +36,7 @@ For support and/or any questions you may have, feel free to join [my discord](ht
 
 | Minecraft Version | Status       |
 |-------------------|--------------|
-| 26.3.x            | ✅ Current    |
+| 26.3.x            | ✅ Current   |
 | 26.2.x            | ✔️ Available |
 | 26.1.x            | ✔️ Available |
 | 1.21.11           | ✔️ Available |
@@ -96,23 +96,23 @@ Alongside the `/name` command, this mod also supports reading prefixes and suffi
 
 ## API
 
-Other Fabric or NeoForge mods can read names managed by Custom Names through `CustomNameApi`:
+Other Fabric or NeoForge mods can read names managed by Custom Names through the `CustomNameApi` class:
 
 ```java
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import xyz.eclipseisoffline.eclipsescustomname.api.CustomNameApi;
+import xyz.eclipseisoffline.eclipsescustomname.api.CustomNameType;
 
-Component prefix = CustomNameApi.getPrefix(player);
-Component nickname = CustomNameApi.getNickname(player);
+Component prefix = CustomNameApi.getName(player, CustomNameType.PREFIX);
+Component nickname = CustomNameApi.getName(player, CustomNameType.NICKNAME);
 Component displayNickname = CustomNameApi.getDisplayNickname(player);
-Component suffix = CustomNameApi.getSuffix(player);
+Component suffix = CustomNameApi.getName(player, CustomNameType.SUFFIX);
 Component fullName = CustomNameApi.getFullName(player);
 ```
 
-`getPrefix`, `getNickname`, and `getSuffix` return `null` when that Custom Names value is not set. `getDisplayNickname`
+`getName` returns `null` when there is no value set for that name type. `getDisplayNickname`
 falls back to the player's vanilla name, and `getFullName` returns the complete display name used by Custom Names.
-LuckPerms names can be read with `getLuckPermsPrefix` and `getLuckPermsSuffix`.
 
 On Fabric, if [Patbox's Placeholder API](https://modrinth.com/mod/placeholder-api) is installed, Custom Names also registers these player placeholders:
 `%eclipsescustomname:prefix%`, `%eclipsescustomname:nickname%`, `%eclipsescustomname:suffix%`,

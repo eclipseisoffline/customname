@@ -6,7 +6,7 @@ import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.commands.CommandSourceStack;
 import xyz.eclipseisoffline.eclipsescustomname.CustomName;
-import xyz.eclipseisoffline.eclipsescustomname.compat.PlaceholderApiCompat;
+import xyz.eclipseisoffline.eclipsescustomname.fabric.compat.PlaceholderApiCompat;
 
 import java.nio.file.Path;
 import java.util.function.Consumer;
@@ -29,18 +29,18 @@ public class CustomNameFabric extends CustomName implements ModInitializer {
     }
 
     @Override
+    protected void registerCommands(Consumer<CommandDispatcher<CommandSourceStack>> registerer) {
+        CommandRegistrationCallback.EVENT.register((dispatcher, _, _) -> registerer.accept(dispatcher));
+    }
+
+    @Override
     protected void registerPlatformIntegrations() {
         if (FabricLoader.getInstance().isModLoaded("placeholder-api")) {
             try {
                 PlaceholderApiCompat.register();
-            } catch (LinkageError exception) {
+            } catch (Exception exception) {
                 LOGGER.warn("Failed to register Placeholder API support", exception);
             }
         }
-    }
-
-    @Override
-    protected void registerCommands(Consumer<CommandDispatcher<CommandSourceStack>> registerer) {
-        CommandRegistrationCallback.EVENT.register((dispatcher, _, _) -> registerer.accept(dispatcher));
     }
 }
